@@ -15,7 +15,7 @@ from pygments.util import ClassNotFound
 
 def _arg_parse() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("name", nargs=None if stdin.isatty() else "?")
+    parser.add_argument("name", nargs="?")
     parser.add_argument("-", dest="use_stdin", action="store_true")
 
     themes = sorted(get_all_styles())
