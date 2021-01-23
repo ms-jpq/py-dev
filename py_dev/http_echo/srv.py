@@ -25,7 +25,7 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
         )
     }
     content_len = next(
-        (int(val) for key, val in headers if key.lower() == "content-length"), 0
+        (int(val) for key, val in headers.items() if key.lower() == "content-length"), 0
     )
     content = handler.rfile.read(content_len)
 
