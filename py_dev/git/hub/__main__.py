@@ -20,9 +20,9 @@ def main() -> None:
     upstream = check_output(
         ("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"),
         text=True,
-    )
+    ).strip()
     remote, _, branch = upstream.partition("/")
-    uri = check_output(("git", "remote", "get-url", remote), text=True)
+    uri = check_output(("git", "remote", "get-url", remote), text=True).strip()
 
     clean_uri = _p_uri(uri, branch=branch)
     open_w(clean_uri)
