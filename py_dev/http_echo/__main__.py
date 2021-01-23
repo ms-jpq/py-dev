@@ -4,6 +4,7 @@ from argparse import ArgumentParser, Namespace
 from http.server import ThreadingHTTPServer
 from socket import getfqdn
 
+from ..run import run_main
 from .srv import EchoServer
 
 
@@ -24,3 +25,6 @@ def main() -> None:
 
     httpd = ThreadingHTTPServer(bind, EchoServer)
     httpd.serve_forever()
+
+
+run_main(main)
