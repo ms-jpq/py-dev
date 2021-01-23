@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-from os import listdir
 from pathlib import Path
 
 from setuptools import find_packages, setup
 
 packages = find_packages(exclude=("tests*",))
 package_data = {pkg: ("py.typed", "requirements.txt") for pkg in packages}
-scripts = listdir("scripts")
+scripts = tuple(map(str, Path("scripts").iterdir()))
 
 
 setup(
