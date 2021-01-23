@@ -35,6 +35,7 @@ def _slurp(name: Optional[str], use_stdin: bool) -> str:
     else:
         return Path(name).read_text()
 
+
 def _get_lexer(file_name: Optional[str], text: str) -> Lexer:
     try:
         return get_lexer_for_filename(file_name)
@@ -58,4 +59,9 @@ def main() -> None:
     print(pretty, end="")
 
 
-main()
+try:
+    main()
+except BrokenPipeError:
+    exit(13)
+except KeyboardInterrupt:
+    exit(130)
