@@ -44,6 +44,9 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
 
 
 class EchoServer(BaseHTTPRequestHandler):
+    def do_HEAD(self) -> None:
+        _echo_req(self)
+
     def do_GET(self) -> None:
         _echo_req(self)
 
