@@ -4,7 +4,7 @@ from shutil import which
 from subprocess import DEVNULL, run
 from sys import argv, path, stderr
 
-_REQUIREMENTS = Path(__file__).parent / "requirements.text"
+_REQUIREMENTS = Path(__file__).parent / "requirements.txt"
 _XDG_DATA_HOME = environ.get("XDG_DATA_HOME")
 _RT_DIR = (
     (Path(_XDG_DATA_HOME) if _XDG_DATA_HOME else Path().home() / ".local" / "share")
