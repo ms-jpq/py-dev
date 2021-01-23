@@ -1,10 +1,10 @@
 from http.server import BaseHTTPRequestHandler
 from locale import strxfrm
 from shutil import get_terminal_size
-from typing import Mapping
+from typing import Any, Mapping
 
 
-def _log(method: str, path: str, headers: Mapping[str, str], content: bytes) -> None:
+def _log(method: str, path: str, headers: Mapping[str, Any], content: bytes) -> None:
     cols, _ = get_terminal_size()
     print("*" * cols)
     print(f"{method.ljust(10)} {path}")
@@ -25,7 +25,7 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
     content = handler.rfile.read(content_len)
 
     handler.send_response_only(200)
-    for key, val in handler.headers.items():
+    for key, val in headers:
         handler.send_header(key, val)
     handler.end_headers()
     handler.wfile.write(content)
@@ -33,7 +33,9 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
     _log(
         method=handler.command,
         path=handler.path,
-        headers={k: v for k, v in sorted(headers, key=lambda t: strxfrm(t[0]))},
+        headers={
+            k: v for k, v in sorted(headers, key=lambda t: strxfrm(next(iter(t))))
+        },
         content=content,
     )
 
