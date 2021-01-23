@@ -18,14 +18,19 @@ def _log(method: str, path: str, headers: Mapping[str, Any], content: bytes) -> 
 
 
 def _echo_req(handler: BaseHTTPRequestHandler) -> None:
-    headers = handler.headers.items()
+    headers = {
+        k: v
+        for k, v in sorted(
+            handler.headers.items(), key=lambda t: strxfrm(next(iter(t)))
+        )
+    }
     content_len = next(
         (int(val) for key, val in headers if key.lower() == "content-length"), 0
     )
     content = handler.rfile.read(content_len)
 
     handler.send_response_only(200)
-    for key, val in headers:
+    for key, val in headers.items():
         handler.send_header(key, val)
     handler.end_headers()
     handler.wfile.write(content)
@@ -33,9 +38,7 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
     _log(
         method=handler.command,
         path=handler.path,
-        headers={
-            k: v for k, v in sorted(headers, key=lambda t: strxfrm(next(iter(t))))
-        },
+        headers=headers,
         content=content,
     )
 
