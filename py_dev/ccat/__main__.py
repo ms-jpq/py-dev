@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from sys import stdin
 from typing import Optional
-from pathlib import Path
 
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
@@ -11,6 +11,8 @@ from pygments.lexers import get_lexer_for_filename, guess_lexer
 from pygments.lexers.special import TextLexer
 from pygments.styles import get_all_styles, get_style_by_name
 from pygments.util import ClassNotFound
+
+from ..run import run_main
 
 
 def _arg_parse() -> Namespace:
@@ -59,9 +61,4 @@ def main() -> None:
     print(pretty, end="")
 
 
-try:
-    main()
-except BrokenPipeError:
-    exit(13)
-except KeyboardInterrupt:
-    exit(130)
+run_main(main)
