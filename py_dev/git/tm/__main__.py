@@ -17,7 +17,7 @@ def _git_file_log(path: str) -> bytes:
             "log",
             "--relative-date",
             "--color=always",
-            "--pretty=format:%Cgreen%h%Creset %Cblue%ad%Creset %s",
+            "--pretty=format:%Cgreen%h%Creset %Cblue%ad%Creset %s%x00",
             "--",
             path,
         ),
