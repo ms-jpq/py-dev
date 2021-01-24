@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from locale import strxfrm
 from os import linesep
 from pathlib import Path
 from subprocess import check_output
@@ -17,19 +18,25 @@ def _git_ls_commits() -> Iterator[Tuple[str, str]]:
             "log",
             "--relative-date",
             "--color=always",
-            "--pretty=format:%Cgreen%h%Creset %Cblue%ad%Creset%x00",
+            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         ),
         text=True,
     )
-    for commit in out.split("\0"):
+    for commit in out.strip("\0").split("\0"):
         sha, _, date = commit.partition(" ")
-        if sha:
-            yield sha, date
+        yield sha, date
 
 
 def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
     run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
+
+
+def _git_show_diff(sha: str) -> bytes:
+    out = check_output(("git", "diff", f"--name-only", "-z", f"{sha}~", sha)).decode()
+    files = out.strip("\0").split("\0")
+    lines = sorted(files, key=strxfrm)
+    print(*lines, sep=linesep)
 
 
 def _parse_args() -> Namespace:
@@ -43,9 +50,12 @@ def _parse_args() -> Namespace:
 def main() -> None:
     args = _parse_args()
     if args.preview:
-        preview = Path(args.preview).read_text()
+        preview = Path(args.preview).read_text().rstrip("\0")
+        sha, _, _ = preview.partition(" ")
+        _git_show_diff(sha)
     elif args.execute:
-        execute = Path(args.execute).read_text()
+        execute = Path(args.execute).read_text().rstrip("\0")
+        sha, _, _ = execute.partition(" ")
     else:
         commits = _git_ls_commits()
         _fzf_lhs(commits)

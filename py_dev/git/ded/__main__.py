@@ -24,7 +24,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
         ),
         text=True,
     )
-    for commit in out.split("\0"):
+    for commit in out.strip("\0").split("\0"):
         meta, *paths = commit.split(linesep)
         sha, _, date = meta.partition(" ")
         for path in paths:
