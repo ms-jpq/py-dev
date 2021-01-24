@@ -1,2 +1,3 @@
 git+https://github.com/ms-jpq/std2.git@cc0f49ead6a409f935bcdae3ffbf0e92bc4ad1ed
 pygments
+markdown
