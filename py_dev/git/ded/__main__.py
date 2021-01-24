@@ -35,7 +35,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
 def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
     lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
-    run_fzf(stdin, f_args=("--show={f}",), p_args=("--preview={f}",))
+    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
 
 
 def _fzf_rhs(sha: str, path: str) -> None:
@@ -47,20 +47,20 @@ def _parse_args() -> Namespace:
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
-    group.add_argument("--show")
+    group.add_argument("--execute")
     return spec_parse(parser)
 
 
 def main() -> None:
     args = _parse_args()
-    if args.show:
-        show = Path(args.show).read_text().rstrip("\0")
-        sha, _, path = show.split(linesep)
-        print_git_show(sha, path=path)
-    elif args.preview:
+    if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, path = preview.split(linesep)
         _fzf_rhs(sha, path=path)
+    elif args.execute:
+        execute = Path(args.execute).read_text().rstrip("\0")
+        sha, _, path = execute.split(linesep)
+        print_git_show(sha, path=path)
     else:
         paths = _git_dead_files()
         _fzf_lhs(paths)

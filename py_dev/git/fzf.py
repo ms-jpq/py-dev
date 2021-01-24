@@ -12,8 +12,8 @@ _SHARED_OPTS = (
 )
 
 
-def run_fzf(stdin: bytes, f_args: Iterable[str], p_args: Iterable[str]) -> None:
-    fin = f"--bind=return:abort+execute:{EOF.join(f_args)}"
+def run_fzf(stdin: bytes, p_args: Iterable[str], e_args: Iterable[str]) -> None:
+    fin = f"--bind=return:abort+execute:{EOF.join(e_args)}"
     rhs = f"--preview={EOF.join(p_args)}"
     run(
         ("fzf", *_SHARED_OPTS, rhs, fin),

@@ -35,8 +35,8 @@ def _git_show_diff(unified: int, sha: str, path: str) -> bytes:
 def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
     run_fzf(
         commits,
-        f_args=(path, f"--unified={unified}", "--show-sha={+f1}"),
-        p_args=(path, f"--unified={unified}", "--preview-sha={f1}"),
+        p_args=(path, f"--unified={unified}", "--preview={f1}"),
+        e_args=(path, f"--unified={unified}", "--execute={f1}"),
     )
 
 
@@ -54,8 +54,8 @@ def _parse_args() -> Namespace:
     parser.add_argument("path")
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview-sha")
-    group.add_argument("--show-sha")
+    group.add_argument("--preview")
+    group.add_argument("--execute")
 
     parser.add_argument("-u", "--unified", type=int, default=3)
 
@@ -65,12 +65,12 @@ def _parse_args() -> Namespace:
 def main() -> None:
     args = _parse_args()
 
-    if args.show_sha:
-        sha = Path(args.show_sha).read_text().rstrip("\0")
-        print_git_show(sha, path=args.path)
-    elif args.preview_sha:
-        sha = Path(args.preview_sha).read_text().rstrip("\0")
+    if args.preview:
+        sha = Path(args.preview).read_text().rstrip("\0")
         _fzf_rhs(args.unified, sha=sha, path=args.path)
+    elif args.execute:
+        sha = Path(args.execute).read_text().rstrip("\0")
+        print_git_show(sha, path=args.path)
     else:
         commits = _git_file_log(args.path)
         _fzf_lhs(args.unified, path=args.path, commits=commits)
