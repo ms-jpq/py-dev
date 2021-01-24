@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+
+from py_dev import __deps__
+from py_dev.git.tm import __main__

@@ -40,7 +40,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
                 yield sha, date, path
 
 
-def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
+def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
     exe = "--show={f}"
     bind = f"--bind=return:abort+execute:{exe}"
     preview_win = "--preview-window=right:70%:wrap"
@@ -55,7 +55,7 @@ def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
     )
 
 
-def _fzf_preview(sha: str, path: str) -> None:
+def _fzf_rhs(sha: str, path: str) -> None:
     content = check_output(("git", "show", f"{sha}~:{path}")).decode()
     pretty = pprn(
         format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=content
@@ -80,10 +80,10 @@ def main() -> None:
     elif args.preview:
         preview = Path(args.preview).read_text().strip()
         sha, _, path = preview.split(linesep)
-        _fzf_preview(sha, path=path)
+        _fzf_rhs(sha, path=path)
     else:
         paths = _git_dead_files()
-        _fzf_show(paths)
+        _fzf_lhs(paths)
 
 
 run_main(main)
