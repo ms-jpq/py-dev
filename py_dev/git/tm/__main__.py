@@ -1,8 +1,6 @@
 from argparse import ArgumentParser, Namespace
-from os import environ
 from pathlib import Path
-from shlex import split
-from subprocess import check_output, run
+from subprocess import check_output
 
 from ...ccat.pprn import pprn_basic
 from ...run import run_main
