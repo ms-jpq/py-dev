@@ -2,10 +2,9 @@ from argparse import ArgumentParser, Namespace
 from os import environ
 from pathlib import Path
 from shlex import split
-from subprocess import run, check_output
+from subprocess import check_output, run
 
-from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
-from ...ccat.pprn import pprn
+from ...ccat.pprn import pprn_basic
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import print_git_show
@@ -48,9 +47,7 @@ def _prettify_diff(diff: bytes, path: str) -> None:
     pager = environ.get("GIT_PAGER")
     if not pager:
         text = diff.decode()
-        pretty = pprn(
-            format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=text
-        )
+        pretty = pprn_basic(filename=path, text=text)
         print(pretty, end="")
     else:
         _, _, rhs = pager.rpartition("|")
@@ -64,9 +61,7 @@ def _fzf_rhs(unified: int, sha: str, path: str) -> None:
         _prettify_diff(diff, path=path)
     else:
         text = _git_show_file(sha, path=path).decode()
-        pretty = pprn(
-            format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=text
-        )
+        pretty = pprn_basic(filename=path, text=text)
         print(pretty, end="")
 
 

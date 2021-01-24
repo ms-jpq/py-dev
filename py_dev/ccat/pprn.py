@@ -8,6 +8,8 @@ from pygments.lexers.special import TextLexer
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 
+from .consts import DEFAULT_FORMATTER, DEFAULT_STYLE
+
 
 def _get_lexer(file_name: Optional[str], text: str) -> Lexer:
     try:
@@ -26,3 +28,9 @@ def pprn(format: str, theme: str, filename: Optional[str], text: str) -> str:
     lexer = _get_lexer(filename, text)
     pretty = highlight(text, lexer=lexer, formatter=formatter)
     return cast(str, pretty)
+
+
+def pprn_basic(filename: Optional[str], text: str) -> str:
+    return pprn(
+        format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=filename, text=text
+    )
