@@ -43,26 +43,15 @@ def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
     )
 
 
-def _prettify_diff(diff: bytes, path: str) -> None:
-    pager = environ.get("GIT_PAGER")
-    if not pager:
-        text = diff.decode()
-        pretty = pprn_basic(filename=path, text=text)
-        print(pretty, end="")
-    else:
-        _, _, rhs = pager.rpartition("|")
-        prog, *args = split(rhs)
-        run((prog, *args), input=diff).check_returncode()
 
 
 def _fzf_rhs(unified: int, sha: str, path: str) -> None:
     if unified >= 0:
-        diff = _git_show_diff(unified, sha=sha, path=path)
-        _prettify_diff(diff, path=path)
+        text = _git_show_diff(unified, sha=sha, path=path).decode()
     else:
         text = _git_show_file(sha, path=path).decode()
-        pretty = pprn_basic(filename=path, text=text)
-        print(pretty, end="")
+    pretty = pprn_basic(filename=path, text=text)
+    print(pretty, end="")
 
 
 def _parse_args() -> Namespace:
