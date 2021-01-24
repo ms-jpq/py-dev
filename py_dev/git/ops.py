@@ -1,10 +1,11 @@
 from itertools import takewhile
 from os import environ, linesep
+from pathlib import Path
 from shlex import join, split
 from shutil import which
 from subprocess import run
 from sys import stdout
-from typing import Optional
+from tempfile import NamedTemporaryFile
 
 from ..ccat.pprn import pprn_basic
 
@@ -15,9 +16,14 @@ def print_git_show(sha: str, path: str) -> None:
     print(cmd, end=end)
 
 
-def pprn(content: bytes, path: Optional[str]) -> None:
-    pretty = pprn_basic(path, text=content.decode())
-    print(pretty, end="")
+def pprn(content: bytes, path: str) -> None:
+    if which("bat"):
+        suffix = "".join(Path(path).suffixes)
+        with NamedTemporaryFile(suffix=suffix) as fd:
+            run(("bat", fd.name)).check_returncode()
+    else:
+        pretty = pprn_basic(path, text=content.decode())
+        print(pretty, end="")
 
 
 def pretty_diff(diff: bytes, path: str) -> None:
