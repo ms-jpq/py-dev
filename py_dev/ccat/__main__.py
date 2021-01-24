@@ -26,16 +26,12 @@ def _arg_parse() -> Namespace:
     )
 
     args = parser.parse_args()
-    if not args.stdin and not args.name:
-        parser.print_usage()
-        exit(1)
-    else:
-        return args
+    return args
 
 
 def main() -> None:
     args = _arg_parse()
-    text = stdin.read() if args.stdin else Path(args.name).read_text()
+    text = stdin.read() if args.stdin or not args.name else Path(args.name).read_text()
     pretty = pprn(
         format=args.formatter, theme=args.theme, filename=args.name, text=text
     )
