@@ -16,6 +16,7 @@ path.append(str(_RT_DIR))
 
 
 try:
+    import markdown
     import pygments
     import std2
 except ImportError:
