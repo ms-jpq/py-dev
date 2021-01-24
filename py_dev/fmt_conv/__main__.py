@@ -27,7 +27,6 @@ def _parse_args() -> Namespace:
 
     parser.add_argument("-", "--stdin", action="store_true")
     parser.add_argument("src", nargs="?")
-    parser.add_argument("dest", nargs="?")
 
     args = parser.parse_args()
     if not args.stdin and not args.src:
@@ -50,10 +49,7 @@ def main() -> None:
         except Exception as e:
             print(e, file=stderr)
         else:
-            if args.dest:
-                Path(args.dest).write_text(output)
-            else:
-                print(output, end="")
+            print(output, end="")
 
 
 run_main(main)
