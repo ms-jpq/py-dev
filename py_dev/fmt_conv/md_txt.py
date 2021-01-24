@@ -16,12 +16,12 @@ def _unmark_element(element: Element) -> str:
     return "".join(cont())
 
 
-Markdown.output_formats["plain"] = _unmark_element
+Markdown.output_formats["plain"] = _unmark_element # type: ignore
 
 
 def md_2_txt(md: str) -> str:
-    _md = Markdown(output_format="plain")
-    _md.stripTopLevelTags = False
+    _md = Markdown(output_format="plain") # type: ignore
+    _md.stripTopLevelTags = False # type: ignore
     txt = _md.convert(md)
     return txt
 
