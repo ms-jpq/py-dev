@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from sys import stdin
-from typing import Optional
 
 from pygments.formatters._mapping import FORMATTERS
 from pygments.styles import get_all_styles
@@ -14,7 +13,7 @@ from .pprn import pprn
 def _arg_parse() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("name", nargs="?")
-    parser.add_argument("-", dest="use_stdin", action="store_true")
+    parser.add_argument("-", "--stdin", action="store_true")
 
     themes = sorted(get_all_styles())
     parser.add_argument("-t", "--theme", choices=themes, default=DEFAULT_STYLE)
@@ -26,19 +25,17 @@ def _arg_parse() -> Namespace:
         "-f", "--formatter", choices=formatters, default=DEFAULT_FORMATTER
     )
 
-    return parser.parse_args()
-
-
-def _slurp(name: Optional[str], use_stdin: bool) -> str:
-    if use_stdin or name is None:
-        return stdin.read()
+    args = parser.parse_args()
+    if not args.stdin and not args.name:
+        parser.print_usage()
+        exit(1)
     else:
-        return Path(name).read_text()
+        return args
 
 
 def main() -> None:
     args = _arg_parse()
-    text = _slurp(args.name, args.use_stdin)
+    text = stdin.read() if args.stdin else Path(args.name).read_text()
     pretty = pprn(
         format=args.formatter, theme=args.theme, filename=args.name, text=text
     )
