@@ -1,6 +1,8 @@
 from argparse import ArgumentParser, Namespace
+from os import environ
 from pathlib import Path
-from subprocess import check_output
+from shlex import split
+from subprocess import run, check_output
 
 from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 from ...ccat.pprn import pprn
@@ -42,24 +44,30 @@ def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
     )
 
 
-# def _prettify_diff(diff: bytes) -> None:
-#     pager = environ.get("GIT_PAGER", "tee")
-#     cmd = next(iter(pager.split("|", 1)))
-#     prog, *args = cmd.split(" ")
-#     ret = run((prog, *(a for a in args if a)), input=diff)
-#     ret.check_returncode()
+def _prettify_diff(diff: bytes, path: str) -> None:
+    pager = environ.get("GIT_PAGER")
+    if not pager:
+        text = diff.decode()
+        pretty = pprn(
+            format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=text
+        )
+        print(pretty, end="")
+    else:
+        _, _, rhs = pager.rpartition("|")
+        prog, *args = split(rhs)
+        run((prog, *args), input=diff).check_returncode()
 
 
 def _fzf_rhs(unified: int, sha: str, path: str) -> None:
     if unified >= 0:
-        text = _git_show_diff(unified, sha=sha, path=path).decode()
+        diff = _git_show_diff(unified, sha=sha, path=path)
+        _prettify_diff(diff, path=path)
     else:
         text = _git_show_file(sha, path=path).decode()
-
-    pretty = pprn(
-        format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=text
-    )
-    print(pretty, end="")
+        pretty = pprn(
+            format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=path, text=text
+        )
+        print(pretty, end="")
 
 
 def _parse_args() -> Namespace:
