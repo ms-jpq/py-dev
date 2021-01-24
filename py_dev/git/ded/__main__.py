@@ -1,8 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from os import environ, linesep
 from pathlib import Path
+from shlex import join
 from subprocess import check_output, run
-from sys import argv, stdout
+from sys import stdout
 from typing import Iterator, Tuple
 
 from py_dev.run import run_main
@@ -10,6 +11,12 @@ from py_dev.run import run_main
 from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 from ...ccat.pprn import pprn
 from ..spec_parse import EXEC_SELF, spec_parse
+
+
+def _git_show(sha: str, path: str) -> None:
+    end = linesep if stdout.isatty() else ""
+    cmd = join(("git", "show", f"{sha}~:{path}"))
+    print(cmd, end=end)
 
 
 def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
@@ -69,12 +76,11 @@ def main() -> None:
     if args.show:
         show = Path(args.show).read_text().strip()
         sha, _, path = show.split(linesep)
-        end = linesep if stdout.isatty() else ""
-        print(f"git show {sha}~:{path}", end=end)
+        _git_show(sha, path=path)
     elif args.preview:
         preview = Path(args.preview).read_text().strip()
         sha, _, path = preview.split(linesep)
-        _fzf_preview(sha, path)
+        _fzf_preview(sha, path=path)
     else:
         paths = _git_dead_files()
         _fzf_show(paths)
