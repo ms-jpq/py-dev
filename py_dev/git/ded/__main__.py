@@ -1,5 +1,4 @@
 from argparse import ArgumentParser, Namespace
-from io import BytesIO
 from os import environ, linesep
 from subprocess import run, check_output
 from sys import argv, stdout
@@ -35,6 +34,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
 
 
 def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
+    shell = argv[0]
     exe = "--show={f}"
     bind = f"--bind=return:abort+execute:{exe}"
     preview_win = "--preview-window=right:70%:wrap"
@@ -46,7 +46,7 @@ def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
 
     run(
         ("fzf", "--read0", "--ansi", bind, preview_win, f"--preview={preview}"),
-        env={**environ, "SHELL": __file__},
+        env={**environ, "SHELL": shell},
         input=stdin,
     ).check_returncode()
 
