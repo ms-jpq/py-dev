@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from os import environ, linesep
-from subprocess import run, check_output
+from pathlib import Path
+from subprocess import check_output, run
 from sys import argv, stdout
 from typing import Iterator, Tuple
 
@@ -39,16 +40,14 @@ def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
     bind = f"--bind=return:abort+execute:{exe}"
     preview_win = "--preview-window=right:70%:wrap"
     preview = "--preview={f}"
-    lines: Iterator[str] = (
-        f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths
-    )
+    lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
 
     run(
         ("fzf", "--read0", "--ansi", bind, preview_win, f"--preview={preview}"),
         env={**environ, "SHELL": shell},
         input=stdin,
-    ).check_returncode()
+    )
 
 
 def _fzf_preview(sha: str, path: str) -> None:
@@ -78,11 +77,13 @@ def _parse_args() -> Namespace:
 def main() -> None:
     args = _parse_args()
     if args.show:
-        sha, _, path = args.show.strip().split(linesep)
+        show = Path(args.show).read_text().strip()
+        sha, _, path = show.split(linesep)
         end = linesep if stdout.isatty() else ""
         print(f"git show {sha}~:{path}", end=end)
     elif args.preview:
-        sha, _, path = args.preview.strip().split(linesep)
+        preview = Path(args.preview).read_text().strip()
+        sha, _, path = preview.split(linesep)
         _fzf_preview(sha, path)
     else:
         paths = _git_dead_files()
