@@ -41,8 +41,6 @@ def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
     )
 
 
-
-
 def _fzf_rhs(unified: int, sha: str, path: str) -> None:
     if unified >= 0:
         text = _git_show_diff(unified, sha=sha, path=path).decode()
