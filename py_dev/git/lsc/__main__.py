@@ -1,16 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from locale import strxfrm
+from os import sep
 from pathlib import Path, PurePath
 from subprocess import check_output
-from typing import (
-    Iterable,
-    Iterator,
-    Literal,
-    Mapping,
-    MutableMapping,
-    MutableSet,
-    Tuple,
-)
+from typing import Iterable, Iterator, Literal, Mapping, MutableMapping, Tuple
 
 from std2.tree import recur_sort
 
@@ -48,12 +41,22 @@ def _recur(path: PurePath, registry: _REGISTRY) -> None:
     parent = path.parent
     if parent != path:
         children = registry.setdefault(parent, {})
-        children[parent] = True
+        children[path] = True
         _recur(parent, registry=registry)
 
 
 def _key_by(path: PurePath) -> Tuple[int, str]:
     return len(path.parents), strxfrm(str(path))
+
+
+def _print_index(index: _INDEX) -> None:
+    for key, vals in index.items():
+        padding = " " * len(key.parents) * 2
+        print(padding, key.name, sep, sep="")
+        for val in vals:
+            if val not in index:
+                padding = " " * len(val.parents) * 2
+                print(padding, val.name, sep="")
 
 
 def _git_show_diff(sha: str) -> None:
@@ -65,8 +68,7 @@ def _git_show_diff(sha: str) -> None:
         _recur(file, registry=registry)
 
     index: _INDEX = recur_sort(registry, key=_key_by)
-    for key, val in index.items():
-        print(key, val)
+    _print_index(index)
 
 
 def _parse_args() -> Namespace:
