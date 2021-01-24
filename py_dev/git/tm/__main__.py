@@ -15,11 +15,11 @@ def _git_file_log(path: str) -> bytes:
             "log",
             "--relative-date",
             "--color=always",
-            "--pretty=format:%Cgreen%h%Creset %Cblue%ad%Creset %s%x00",
+            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
             "--",
             path,
         ),
-    )
+    ).strip(b"\0")
 
 
 def _git_show_file(sha: str, path: str) -> bytes:
