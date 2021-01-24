@@ -5,7 +5,7 @@ from subprocess import check_output
 from ...ccat.pprn import pprn_basic
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import print_git_show
+from ..ops import pretty_diff, print_git_show
 from ..spec_parse import spec_parse
 
 
@@ -43,11 +43,12 @@ def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
 
 def _fzf_rhs(unified: int, sha: str, path: str) -> None:
     if unified >= 0:
-        text = _git_show_diff(unified, sha=sha, path=path).decode()
+        diff = _git_show_diff(unified, sha=sha, path=path)
+        pretty_diff(diff, path=path)
     else:
         text = _git_show_file(sha, path=path).decode()
-    pretty = pprn_basic(filename=path, text=text)
-    print(pretty, end="")
+        pretty = pprn_basic(filename=path, text=text)
+        print(pretty, end="")
 
 
 def _parse_args() -> Namespace:
