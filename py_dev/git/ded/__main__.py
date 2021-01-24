@@ -1,22 +1,16 @@
 from argparse import ArgumentParser, Namespace
-from os import environ, linesep
+from os import linesep
 from pathlib import Path
-from shlex import join
-from subprocess import check_output, run
-from sys import stdout
+from subprocess import check_output
 from typing import Iterator, Tuple
 
 from py_dev.run import run_main
 
 from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 from ...ccat.pprn import pprn
-from ..spec_parse import EXEC_SELF, spec_parse
-
-
-def _git_show(sha: str, path: str) -> None:
-    end = linesep if stdout.isatty() else ""
-    cmd = join(("git", "show", f"{sha}~:{path}"))
-    print(cmd, end=end)
+from ..fzf import run_fzf
+from ..ops import print_git_show
+from ..spec_parse import spec_parse
 
 
 def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
@@ -41,18 +35,9 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
 
 
 def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
-    exe = "--show={f}"
-    bind = f"--bind=return:abort+execute:{exe}"
-    preview_win = "--preview-window=right:70%:wrap"
-    preview = "--preview={f}"
     lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
-
-    run(
-        ("fzf", "--read0", "--ansi", bind, preview_win, f"--preview={preview}"),
-        env={**environ, "SHELL": EXEC_SELF},
-        input=stdin,
-    )
+    run_fzf(stdin, f_args=("--show={f}",), p_args=("--preview={f}",))
 
 
 def _fzf_rhs(sha: str, path: str) -> None:
@@ -74,11 +59,11 @@ def _parse_args() -> Namespace:
 def main() -> None:
     args = _parse_args()
     if args.show:
-        show = Path(args.show).read_text().strip()
+        show = Path(args.show).read_text().rstrip("\0")
         sha, _, path = show.split(linesep)
-        _git_show(sha, path=path)
+        print_git_show(sha, path=path)
     elif args.preview:
-        preview = Path(args.preview).read_text().strip()
+        preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, path = preview.split(linesep)
         _fzf_rhs(sha, path=path)
     else:

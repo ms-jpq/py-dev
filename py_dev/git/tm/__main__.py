@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
-
 from argparse import ArgumentParser, Namespace
-from os import environ
 from pathlib import Path
-from subprocess import check_output, run
+from subprocess import check_output
 
 from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 from ...ccat.pprn import pprn
 from ...run import run_main
-from ..spec_parse import EOF, EXEC_SELF, spec_parse
+from ..fzf import run_fzf
+from ..ops import print_git_show
+from ..spec_parse import spec_parse
 
 
 def _git_file_log(path: str) -> bytes:
@@ -36,16 +35,10 @@ def _git_show_diff(unified: int, sha: str, path: str) -> bytes:
 
 
 def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
-    exe = f"{path}{EOF}--show-sha={{+f1}}"
-    bind = f"--bind=return:abort+execute:{exe}"
-    preview_win = "--preview-window=right:70%:wrap"
-    diff_arg = f"--unified={unified}{EOF}" if unified >= 0 else ""
-    preview = f"{diff_arg}--preview-sha={{f1}}{EOF}{path}"
-
-    run(
-        ("fzf", "--ansi", "-m", bind, preview_win, f"--preview={preview}"),
-        env={**environ, "SHELL": EXEC_SELF},
-        input=commits,
+    run_fzf(
+        commits,
+        f_args=(path, f"--unified={unified}", "--show-sha={+f1}"),
+        p_args=(path, f"--unified={unified}", "--preview-sha={f1}"),
     )
 
 
@@ -86,10 +79,10 @@ def main() -> None:
     args = _parse_args()
 
     if args.show_sha:
-        sha = Path(args.show_sha).read_text().strip()
-        print(f"git show {sha}:{args.path}")
+        sha = Path(args.show_sha).read_text().rstrip("\0")
+        print_git_show(sha, path=args.path)
     elif args.preview_sha:
-        sha = Path(args.preview_sha).read_text().strip()
+        sha = Path(args.preview_sha).read_text().rstrip("\0")
         _fzf_rhs(args.unified, sha=sha, path=args.path)
     else:
         commits = _git_file_log(args.path)
