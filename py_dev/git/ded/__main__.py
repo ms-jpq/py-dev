@@ -6,9 +6,8 @@ from typing import Iterator, Tuple
 
 from py_dev.run import run_main
 
-from ...ccat.pprn import pprn_basic
 from ..fzf import run_fzf
-from ..ops import print_git_show
+from ..ops import pprn, print_git_show
 from ..spec_parse import spec_parse
 
 
@@ -40,9 +39,8 @@ def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
 
 
 def _fzf_rhs(sha: str, path: str) -> None:
-    content = check_output(("git", "show", f"{sha}~:{path}")).decode()
-    pretty = pprn_basic(path, text=content)
-    print(pretty, end="")
+    content = check_output(("git", "show", f"{sha}~:{path}"))
+    pprn(content, path=path)
 
 
 def _parse_args() -> Namespace:

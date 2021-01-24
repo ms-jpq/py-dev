@@ -2,10 +2,9 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from subprocess import check_output
 
-from ...ccat.pprn import pprn_basic
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_diff, print_git_show
+from ..ops import pprn, pretty_diff, print_git_show
 from ..spec_parse import spec_parse
 
 
@@ -46,9 +45,8 @@ def _fzf_rhs(unified: int, sha: str, path: str) -> None:
         diff = _git_show_diff(unified, sha=sha, path=path)
         pretty_diff(diff, path=path)
     else:
-        text = _git_show_file(sha, path=path).decode()
-        pretty = pprn_basic(filename=path, text=text)
-        print(pretty, end="")
+        content = _git_show_file(sha, path=path)
+        pprn(content, path=path)
 
 
 def _parse_args() -> Namespace:
