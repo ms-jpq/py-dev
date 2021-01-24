@@ -4,8 +4,7 @@ from pathlib import Path
 from subprocess import check_output
 from typing import Iterator, Tuple
 
-from py_dev.run import run_main
-
+from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pprn, print_git_show
 from ..spec_parse import spec_parse

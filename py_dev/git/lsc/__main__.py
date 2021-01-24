@@ -1,12 +1,12 @@
 from argparse import ArgumentParser, Namespace
 from locale import strxfrm
-from os import linesep
 from pathlib import Path, PurePath
 from subprocess import check_output
 from typing import Iterable, Iterator, MutableMapping, MutableSet, Tuple
-from std2.tree import recur_sort
-from py_dev.run import run_main
 
+from std2.tree import recur_sort
+
+from ...run import run_main
 from ..fzf import run_fzf
 from ..spec_parse import spec_parse
 
@@ -32,21 +32,29 @@ def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
 
 
-def _git_show_diff(sha: str) -> bytes:
-    root = check_output(("git", "rev-parse", "--show-toplevel"), text=True).rstrip()
+def _recur(
+    path: PurePath, registry: MutableMapping[PurePath, MutableSet[PurePath]]
+) -> None:
+    parent = path.parent
+    if parent != path:
+        children = registry.setdefault(parent, set())
+        children.add(path)
+        _recur(parent, registry=registry)
+
+
+def _key_by(path: PurePath) -> Tuple[int, str]:
+    return len(path.parents), strxfrm(str(path))
+
+
+def _git_show_diff(sha: str) -> None:
     out = check_output(("git", "diff", f"--name-only", "-z", f"{sha}~", sha), text=True)
     files = tuple(map(PurePath, out.strip("\0").split("\0")))
 
     registry: MutableMapping[PurePath, MutableSet[PurePath]] = {}
-
-    def _recur(path: PurePath) -> None:
-        if path.parent != path:
-            children = registry.setdefault(path.parent, set())
-            children.add(path)
-
     for file in files:
-        _recur(file)
+        _recur(file, registry=registry)
 
+    index = recur_sort(registry, key=_key_by)
     for key, val in registry.items():
         print(key, val)
 
