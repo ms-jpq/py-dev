@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from io import BytesIO
 from os import environ, linesep
-from subprocess import check_call, check_output
+from subprocess import run, check_output
 from sys import argv, stdout
 from typing import Iterator, Tuple
 
@@ -42,13 +42,13 @@ def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
     lines: Iterator[str] = (
         f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths
     )
-    stdin = BytesIO("\0".join(lines).encode())
+    stdin = "\0".join(lines).encode()
 
-    check_call(
+    run(
         ("fzf", "--read0", "--ansi", bind, preview_win, f"--preview={preview}"),
         env={**environ, "SHELL": __file__},
-        stdin=stdin,
-    )
+        input=stdin,
+    ).check_returncode()
 
 
 def _fzf_preview(sha: str, path: str) -> None:
