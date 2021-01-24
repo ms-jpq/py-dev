@@ -1,2 +1,2 @@
-git+https://github.com/ms-jpq/std2.git@05d39bf39393cd58494a1ea9509fcf4293443ef6
+git+https://github.com/ms-jpq/std2.git@4b454c5fd4faee033ecf3697134d654a2337a26e
 pygments
