@@ -9,8 +9,7 @@ from py_dev.run import run_main
 
 from ...ccat.consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 from ...ccat.pprn import pprn
-
-_EOF = "\04"
+from ..spec_parse import EXEC_SELF, spec_parse
 
 
 def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
@@ -35,7 +34,6 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
 
 
 def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
-    shell = argv[0]
     exe = "--show={f}"
     bind = f"--bind=return:abort+execute:{exe}"
     preview_win = "--preview-window=right:70%:wrap"
@@ -45,7 +43,7 @@ def _fzf_show(paths: Iterator[Tuple[str, str, str]]) -> None:
 
     run(
         ("fzf", "--read0", "--ansi", bind, preview_win, f"--preview={preview}"),
-        env={**environ, "SHELL": shell},
+        env={**environ, "SHELL": EXEC_SELF},
         input=stdin,
     )
 
@@ -63,15 +61,7 @@ def _parse_args() -> Namespace:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
     group.add_argument("--show")
-
-    try:
-        _, a1, a2 = argv
-        if a1 == "-c":
-            return parser.parse_args(a2.split(_EOF))
-        else:
-            return parser.parse_args()
-    except ValueError:
-        return parser.parse_args()
+    return spec_parse(parser)
 
 
 def main() -> None:
