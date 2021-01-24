@@ -17,10 +17,13 @@ def print_git_show(sha: str, path: str) -> None:
 
 
 def pprn(content: bytes, path: str) -> None:
-    if which("bat"):
+    cmd = "bat"
+    if which(cmd):
         suffix = "".join(Path(path).suffixes)
         with NamedTemporaryFile(suffix=suffix) as fd:
-            run(("bat", fd.name)).check_returncode()
+            fd.write(content)
+            fd.flush()
+            run((cmd, "--color=always", "--", fd.name)).check_returncode()
     else:
         pretty = pprn_basic(path, text=content.decode())
         print(pretty, end="")
