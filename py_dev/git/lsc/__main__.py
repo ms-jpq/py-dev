@@ -49,14 +49,27 @@ def _key_by(path: PurePath) -> Tuple[int, str]:
     return len(path.parents), strxfrm(str(path))
 
 
+def _print_padding(path: PurePath, ending: bool) -> None:
+    if ending:
+        print(" └──", end="")
+        print("─" * (len(path.parents) * 3), end="")
+        print(" ", end="")
+    else:
+        print(" │  " * len(path.parents), end="")
+        print(" ├─ ", end="")
+
+
 def _print_index(index: _INDEX) -> None:
-    for key, vals in index.items():
-        padding = " " * len(key.parents) * 2
-        print(padding, key.name, sep, sep="")
-        for val in vals:
-            if val not in index:
-                padding = " " * len(val.parents) * 2
-                print(padding, val.name, sep="")
+    for idx, (folder, vals) in enumerate(index.items(), start=1):
+        files = tuple(val for val in vals if val not in index)
+
+        _print_padding(folder, ending=False)
+        print(folder.name, sep, sep="")
+        for jdx, file in enumerate(files, start=1):
+            ending = idx == len(index) and jdx == len(files)
+
+            _print_padding(file, ending=ending)
+            print(file.name, sep="")
 
 
 def _git_show_diff(sha: str) -> None:
