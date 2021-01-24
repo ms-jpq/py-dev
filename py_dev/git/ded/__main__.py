@@ -22,7 +22,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
             "--name-only",
             "--relative-date",
             "--color=always",
-            "--pretty=format:%Cgreen%h%Creset %Cblue%ad%Creset%x00",
+            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         ),
         text=True,
     )
