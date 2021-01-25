@@ -1,11 +1,7 @@
 from argparse import ArgumentParser, Namespace
-from locale import strxfrm
-from os import sep
-from pathlib import Path, PurePath
-from subprocess import check_output
-from typing import Iterable, Iterator, Literal, Mapping, MutableMapping, Tuple
-
-from std2.tree import recur_sort
+from pathlib import Path
+from subprocess import check_call, check_output
+from typing import Iterable, Iterator, Tuple
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -18,7 +14,7 @@ def _git_ls_commits() -> Iterator[Tuple[str, str]]:
             "git",
             "log",
             "--relative-date",
-            "--color=always",
+            "--color",
             "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         ),
         text=True,
@@ -33,55 +29,17 @@ def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
 
 
-_REGISTRY = MutableMapping[PurePath, MutableMapping[PurePath, Literal[True]]]
-_INDEX = Mapping[PurePath, Mapping[PurePath, Literal[True]]]
-
-
-def _recur(path: PurePath, registry: _REGISTRY) -> None:
-    parent = path.parent
-    if parent != path:
-        children = registry.setdefault(parent, {})
-        children[path] = True
-        _recur(parent, registry=registry)
-
-
-def _key_by(path: PurePath) -> Tuple[int, str]:
-    return len(path.parents), strxfrm(str(path))
-
-
-def _print_padding(path: PurePath, ending: bool) -> None:
-    if ending:
-        print(" └──", end="")
-        print("─" * (len(path.parents) * 3), end="")
-        print(" ", end="")
-    else:
-        print(" │  " * len(path.parents), end="")
-        print(" ├─ ", end="")
-
-
-def _print_index(index: _INDEX) -> None:
-    for idx, (folder, vals) in enumerate(index.items(), start=1):
-        files = tuple(val for val in vals if val not in index)
-
-        _print_padding(folder, ending=False)
-        print(folder.name, sep, sep="")
-        for jdx, file in enumerate(files, start=1):
-            ending = idx == len(index) and jdx == len(files)
-
-            _print_padding(file, ending=ending)
-            print(file.name, sep="")
-
-
-def _git_show_diff(sha: str) -> None:
-    out = check_output(("git", "diff", f"--name-only", "-z", f"{sha}~", sha), text=True)
-    files = tuple(map(PurePath, out.strip("\0").split("\0")))
-
-    registry: _REGISTRY = {}
-    for file in files:
-        _recur(file, registry=registry)
-
-    index: _INDEX = recur_sort(registry, key=_key_by)
-    _print_index(index)
+def _git_show_commit(sha: str) -> None:
+    check_call(
+        (
+            "git",
+            "show",
+            "--color",
+            "--color-moved=dimmed-zebra",
+            "--word-diff=color",
+            sha,
+        )
+    )
 
 
 def _parse_args() -> Namespace:
@@ -97,7 +55,7 @@ def main() -> None:
     if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, _ = preview.partition(" ")
-        _git_show_diff(sha)
+        _git_show_commit(sha)
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
         sha, _, _ = execute.partition(" ")
