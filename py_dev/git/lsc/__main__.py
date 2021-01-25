@@ -30,10 +30,12 @@ def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
 
 
 def _git_show_commit(sha: str) -> None:
+    check_call(("git", "show", "--submodule", "--stat", "--color", sha))
     check_call(
         (
             "git",
             "show",
+            "--submodule",
             "--color",
             "--color-moved=dimmed-zebra",
             "--word-diff=color",
