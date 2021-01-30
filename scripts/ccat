@@ -1,4 +1,3 @@
 #!/usr/bin/env python3
 
-from py_dev import __deps__
 from py_dev.ccat import __main__
