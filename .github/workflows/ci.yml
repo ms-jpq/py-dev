@@ -30,7 +30,7 @@ jobs:
         run: pip install -U mypy
 
       - name: Pip Packages 2
-        run: pip install -U -r ./py_dev/requirements.txt
+        run: pip install -U -r requirements.txt
 
       - name: Lint
         run: ./lint.sh
