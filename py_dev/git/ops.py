@@ -3,7 +3,7 @@ from os import environ, linesep
 from pathlib import Path
 from shlex import join, split
 from shutil import which
-from subprocess import run
+from subprocess import check_call, run
 from sys import stdout
 from tempfile import NamedTemporaryFile
 from typing import Optional
@@ -24,7 +24,7 @@ def pprn(content: bytes, path: Optional[str]) -> None:
         with NamedTemporaryFile(suffix=suffix) as fd:
             fd.write(content)
             fd.flush()
-            run((cmd, "--color=always", "--", fd.name)).check_returncode()
+            check_call((cmd, "--color=always", "--", fd.name))
     else:
         pretty = pprn_basic(path, text=content.decode())
         print(pretty, end="")
