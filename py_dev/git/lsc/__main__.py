@@ -1,10 +1,12 @@
 from argparse import ArgumentParser, Namespace
+from os import linesep
 from pathlib import Path
 from subprocess import check_call, check_output
 from typing import Iterable, Iterator, Tuple
 
 from ...run import run_main
 from ..fzf import run_fzf
+from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
@@ -31,17 +33,17 @@ def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
 
 def _git_show_commit(sha: str) -> None:
     check_call(("git", "show", "--submodule", "--stat", "--color", sha))
-    check_call(
+    print(linesep * 3)
+    diffs = check_output(
         (
             "git",
             "show",
             "--submodule",
-            "--color",
-            "--color-moved=dimmed-zebra",
-            "--word-diff=color",
+            "--pretty=format:",
             sha,
         )
     )
+    pretty_diff(diffs, path=None)
 
 
 def _parse_args() -> Namespace:
