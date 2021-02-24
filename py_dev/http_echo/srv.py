@@ -29,7 +29,7 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
     )
     content = handler.rfile.read(content_len)
 
-    handler.send_response_only(200)
+    handler.send_response(200)
     for key, val in headers.items():
         handler.send_header(key, val)
     handler.end_headers()
