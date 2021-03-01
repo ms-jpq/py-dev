@@ -28,11 +28,11 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
         sha, _, date = meta.partition(" ")
         for path in paths:
             if path:
-                yield sha, date, path
+                yield f"{sha}~", date, path
 
 
 def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
-    lines = (f"{sha}~{linesep}{date}{linesep}{path}" for sha, date, path in paths)
+    lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
     run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
 
