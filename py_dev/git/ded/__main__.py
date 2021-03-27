@@ -34,7 +34,7 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
 def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
     lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
-    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={{f}}",))
+    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
 
 
 def _fzf_rhs(sha: str, path: str) -> None:
