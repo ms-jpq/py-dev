@@ -15,6 +15,7 @@ def git_show_many(it: Iterable[Tuple[str, str]]) -> None:
     for sha, path in it:
         temp = tmp / path
         raw = check_output(("git", "show", f"{sha}:{path}"))
+        temp.parent.mkdir(parents=True, exist_ok=True)
         temp.write_bytes(raw)
 
     print(join(("cd", str(tmp))))
