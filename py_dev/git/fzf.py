@@ -7,6 +7,7 @@ from .spec_parse import EOF, EXEC_SELF
 _SHARED_OPTS = (
     "--read0",
     "--print0",
+    "--multi",
     "--ansi",
     "--preview-window=right:70%:wrap",
 )

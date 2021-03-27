@@ -1,10 +1,10 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from subprocess import check_output
+from subprocess import check_call, check_output
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pprn, pretty_diff, print_git_show
+from ..ops import pprn, pretty_diff
 from ..spec_parse import spec_parse
 
 
@@ -70,7 +70,7 @@ def main() -> None:
         _fzf_rhs(args.unified, sha=sha, path=args.path)
     elif args.execute:
         sha = Path(args.execute).read_text().rstrip("\0")
-        print_git_show(sha, path=args.path)
+        check_call(("git", "show", f"{sha}:{args.path}"))
     else:
         commits = _git_file_log(args.path)
         _fzf_lhs(args.unified, path=args.path, commits=commits)

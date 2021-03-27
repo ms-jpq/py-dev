@@ -1,20 +1,23 @@
 from itertools import takewhile
-from os import environ, linesep
+from os import environ
 from pathlib import Path
 from shlex import join, split
 from shutil import which
-from subprocess import check_call, run
-from sys import stdout
-from tempfile import NamedTemporaryFile
-from typing import Optional
+from subprocess import check_call, check_output, run
+from tempfile import NamedTemporaryFile, mkdtemp
+from typing import Iterable, Optional, Tuple
 
 from ..ccat.pprn import pprn_basic
 
 
-def print_git_show(sha: str, path: str) -> None:
-    end = linesep if stdout.isatty() else ""
-    cmd = join(("git", "show", f"{sha}:{path}"))
-    print(cmd, end=end)
+def git_show_many(it: Iterable[Tuple[str, str]]) -> None:
+    tmp = Path(mkdtemp())
+    for sha, path in it:
+        temp = tmp / path
+        raw = check_output(("git", "show", f"{sha}:{path}"))
+        temp.write_bytes(raw)
+
+    print(join(("cd", str(tmp))))
 
 
 def pprn(content: bytes, path: Optional[str]) -> None:

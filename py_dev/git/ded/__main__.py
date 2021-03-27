@@ -6,7 +6,7 @@ from typing import Iterator, Tuple
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pprn, print_git_show
+from ..ops import git_show_many, pprn
 from ..spec_parse import spec_parse
 
 
@@ -38,7 +38,7 @@ def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
 
 
 def _fzf_rhs(sha: str, path: str) -> None:
-    content = check_output(("git", "show", f"{sha}~:{path}"))
+    content = check_output(("git", "show", f"{sha}:{path}"))
     pprn(content, path=path)
 
 
@@ -57,9 +57,14 @@ def main() -> None:
         sha, _, path = preview.split(linesep)
         _fzf_rhs(sha, path=path)
     elif args.execute:
-        execute = Path(args.execute).read_text().rstrip("\0")
-        sha, _, path = execute.split(linesep)
-        print_git_show(sha, path=path)
+        lines = Path(args.execute).read_text().rstrip("\0").split("\0")
+
+        def cont() -> Iterator[Tuple[str, str]]:
+            for line in lines:
+                sha, _, path = line.split(linesep)
+                yield sha, path
+
+        git_show_many(cont())
     else:
         paths = _git_dead_files()
         _fzf_lhs(paths)
