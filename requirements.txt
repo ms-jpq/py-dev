@@ -1,3 +1,3 @@
-std2@https://github.com/ms-jpq/std2/archive/7c5622a55712d473716098c1ccb7288658eb27fa.tar.gz
+std2@https://github.com/ms-jpq/std2/archive/de15404d37a628788b9afd433a8118f2182fad34.tar.gz
 pygments
 Jinja2

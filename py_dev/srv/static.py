@@ -13,10 +13,11 @@ from os import sep
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
 from stat import S_ISDIR
-from typing import Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union
 from urllib.parse import urlsplit
 
 from jinja2 import Environment
+from std2.datetime import utc_to_local
 from std2.pathlib import is_relative_to
 
 from ..j2 import build, render
@@ -31,6 +32,7 @@ class _Fd:
     sortby: Tuple[bool, str, str]
     rel_path: PurePath
     name: str
+    mime: Optional[str]
     size: int
     mtime: datetime
 
@@ -41,12 +43,21 @@ def _fd(root: Path, path: Path) -> _Fd:
     sortby = (not is_dir, strxfrm(path.suffix), strxfrm(path.stem))
     rel_path = path.relative_to(root)
     name = path.name + sep if is_dir else path.name
-    mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
+
+    if is_dir:
+        mime = None
+    else:
+        mime, _ = guess_type(path, strict=False)
+
+    mtime = utc_to_local(
+        datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).replace(microsecond=0)
+    )
     fd = _Fd(
         path=path,
         sortby=sortby,
         rel_path=rel_path,
         name=name,
+        mime=mime,
         size=stat.st_size,
         mtime=mtime,
     )
@@ -73,14 +84,11 @@ def _seek(
 
 
 def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
+    mimetype = fd.mime or "application/octet-stream"
     last_mod = format_datetime(fd.mtime, usegmt=True)
-    mime, encoding = guess_type(fd.path, strict=False)
-    mt = mime or "application/octet-stream"
 
     handler.send_response(HTTPStatus.OK)
-    handler.send_header("Content-Type", value=mt)
-    if encoding:
-        handler.send_header("Content-Encoding", encoding)
+    handler.send_header("Content-Type", value=mimetype)
     handler.send_header("Content-Length", str(fd.size))
     handler.send_header("Last-Modified", last_mod)
     handler.end_headers()
@@ -102,7 +110,14 @@ def _human_readable_size(size: float, precision: int = 3) -> str:
 def _index(j2: Environment, fd: Sequence[_Fd]) -> bytes:
     env = {
         "PATHS": (
-            (f.name, f.rel_path, _human_readable_size(f.size), f.mtime) for f in fd
+            (
+                f.name,
+                f.rel_path,
+                f.mime,
+                _human_readable_size(f.size),
+                f.mtime.strftime("%x %X %Z"),
+            )
+            for f in fd
         )
     }
     index = render(j2, path=_INDEX, env=env)
