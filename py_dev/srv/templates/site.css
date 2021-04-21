@@ -10,6 +10,6 @@ th {
   text-align: left;
 }
 
-td {
+th, td {
   padding-right: 2em;
 }
