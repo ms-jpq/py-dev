@@ -37,29 +37,33 @@ class _Fd:
     mtime: datetime
 
 
-def _fd(root: Path, path: Path) -> _Fd:
-    stat = path.stat()
-    is_dir = S_ISDIR(stat.st_mode)
-    sortby = (not is_dir, strxfrm(path.suffix), strxfrm(path.stem))
-    rel_path = path.relative_to(root)
-    name = path.name + sep if is_dir else path.name
-
-    if is_dir:
-        mime = None
+def _fd(root: Path, path: Path) -> Optional[_Fd]:
+    try:
+        stat = path.stat()
+    except PermissionError:
+        return None
     else:
-        mime, _ = guess_type(path, strict=False)
+        is_dir = S_ISDIR(stat.st_mode)
+        sortby = (not is_dir, strxfrm(path.suffix), strxfrm(path.stem))
+        rel_path = path.relative_to(root)
+        name = path.name + sep if is_dir else path.name
 
-    mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
-    fd = _Fd(
-        path=path,
-        sortby=sortby,
-        rel_path=rel_path,
-        name=name,
-        mime=mime,
-        size=stat.st_size,
-        mtime=mtime,
-    )
-    return fd
+        if is_dir:
+            mime = None
+        else:
+            mime, _ = guess_type(path, strict=False)
+
+        mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
+        fd = _Fd(
+            path=path,
+            sortby=sortby,
+            rel_path=rel_path,
+            name=name,
+            mime=mime,
+            size=stat.st_size,
+            mtime=mtime,
+        )
+        return fd
 
 
 def _seek(
@@ -73,10 +77,17 @@ def _seek(
     if not is_relative_to(asset, root) or not asset.exists():
         return None
     elif asset.is_dir():
-        return sorted(
-            (_fd(root, path=child) for child in asset.iterdir()),
-            key=lambda fd: fd.sortby,
-        )
+        try:
+            return sorted(
+                (
+                    fd
+                    for fd in (_fd(root, path=child) for child in asset.iterdir())
+                    if fd
+                ),
+                key=lambda fd: fd.sortby,
+            )
+        except PermissionError:
+            return None
     else:
         return _fd(root, path=asset)
 
