@@ -114,7 +114,7 @@ def _index(j2: Environment, fd: Sequence[_Fd]) -> bytes:
                 f.name,
                 f.rel_path,
                 f.mime,
-                _human_readable_size(f.size),
+                _human_readable_size(f.size, precision=2),
                 f.mtime.strftime("%x %X %Z"),
             )
             for f in fd
