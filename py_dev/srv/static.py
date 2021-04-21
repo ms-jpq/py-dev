@@ -1,10 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import format_datetime
+from functools import partial
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
+from itertools import count
+from locale import str as format_float
 from locale import strxfrm
 from mimetypes import guess_type
+from operator import pow
 from os import sep
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
@@ -53,13 +57,17 @@ def _seek(
     handler: BaseHTTPRequestHandler, root: Path
 ) -> Union[_Fd, Sequence[_Fd], None]:
     uri = urlsplit(handler.path)
-    path = PurePosixPath(uri.path)
+    path = PurePosixPath(uri.path).relative_to(PurePosixPath("/"))
     asset = (root / path).resolve()
+    print(root, asset, flush=True)
 
     if not is_relative_to(asset, root) or not asset.exists():
         return None
     elif asset.is_dir():
-        return tuple(_fd(root, path=child) for child in asset.iterdir())
+        return sorted(
+            (_fd(root, path=child) for child in asset.iterdir()),
+            key=lambda fd: fd.sortby,
+        )
     else:
         return _fd(root, path=asset)
 
@@ -78,8 +86,25 @@ def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
     handler.end_headers()
 
 
+def _human_readable_size(size: float, precision: int = 3) -> str:
+    units = ("", "K", "M", "G", "T", "P", "E", "Z", "Y")
+    step = partial(pow, 10)
+    steps = zip(map(step, count(0, step=3)), units)
+    for factor, unit in steps:
+        divided = size / factor
+        if abs(divided) < 1000:
+            fmt = format_float(round(divided, precision))
+            return f"{fmt}{unit}"
+    else:
+        raise ValueError(f"unit over flow: {size}")
+
+
 def _index(j2: Environment, fd: Sequence[_Fd]) -> bytes:
-    env = {"": ""}
+    env = {
+        "PATHS": (
+            (f.name, f.rel_path, _human_readable_size(f.size), f.mtime) for f in fd
+        )
+    }
     index = render(j2, path=_INDEX, env=env)
     return index.encode()
 
@@ -99,7 +124,7 @@ def build_j2() -> Environment:
 def head(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
     fd = _seek(handler, root=root)
     if fd is None:
-        handler.send_error(HTTPStatus.NOT_FOUND)
+        handler.send_error(HTTPStatus.NOT_FOUND, explain=None)
     elif isinstance(fd, Sequence):
         index = _index(j2, fd=fd)
         _send_index_headers(handler, index=index)

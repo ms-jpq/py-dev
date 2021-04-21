@@ -9,7 +9,7 @@ from .static import build_j2, get, head
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("base", nargs="?", type=Path, default=Path("."))
+    parser.add_argument("root", nargs="?", type=Path, default=Path("."))
     parser.add_argument("-o", "--open", action="store_true")
     parser.add_argument("-p", "--port", type=int, default=8080)
     return parser.parse_args()
@@ -19,16 +19,17 @@ def main() -> None:
     args = _parse_args()
     addr = "" if args.open else "localhost"
     bind = (addr, args.port)
+    root = Path(args.root).resolve()
 
     host = getfqdn() if args.open else "localhost"
     j2 = build_j2()
 
     class Handler(BaseHTTPRequestHandler):
         def do_HEAD(self) -> None:
-            head(j2, handler=self, root=args.base)
+            head(j2, handler=self, root=root)
 
         def do_GET(self) -> None:
-            get(j2, handler=self, root=args.base)
+            get(j2, handler=self, root=root)
 
     httpd = ThreadingHTTPServer(bind, Handler)
     print(f"SERVING -- http://{host}:{args.port}", flush=True)

@@ -21,15 +21,15 @@
         </tr>
       </thead>
       <tbody>
+        {% for NAME, PATH, SIZE, MTIME in PATHS %}
         <tr>
-          {% for PATH, SIZE, MTIME in PATHS %}
           <td>
-            <a rel="noreferrer" href="{{ path.name | e }}/">{{ PATH.name | e }}</a>
+            <a rel="noreferrer" href="{{ PATH }}">{{ NAME | e }}</a>
           </td>
           <td>{{ SIZE }}</td>
           <td>{{ MTIME }}</td>
-          {% endfor %}
         </tr>
+        {% endfor %}
       </tbody>
     </table>
   </body>
