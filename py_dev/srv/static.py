@@ -72,7 +72,6 @@ def _seek(
     uri = urlsplit(handler.path)
     path = PurePosixPath(uri.path).relative_to(base)
     asset = (root / path).resolve()
-    print(root, asset, flush=True)
 
     if not is_relative_to(asset, root) or not asset.exists():
         return None
