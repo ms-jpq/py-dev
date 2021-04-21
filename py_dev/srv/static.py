@@ -49,9 +49,7 @@ def _fd(root: Path, path: Path) -> _Fd:
     else:
         mime, _ = guess_type(path, strict=False)
 
-    mtime = utc_to_local(
-        datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).replace(microsecond=0)
-    )
+    mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
     fd = _Fd(
         path=path,
         sortby=sortby,
@@ -65,10 +63,10 @@ def _fd(root: Path, path: Path) -> _Fd:
 
 
 def _seek(
-    handler: BaseHTTPRequestHandler, root: Path
+    handler: BaseHTTPRequestHandler, base: PurePosixPath, root: Path
 ) -> Union[_Fd, Sequence[_Fd], None]:
     uri = urlsplit(handler.path)
-    path = PurePosixPath(uri.path).relative_to(PurePosixPath("/"))
+    path = PurePosixPath(uri.path).relative_to(base)
     asset = (root / path).resolve()
     print(root, asset, flush=True)
 
@@ -112,10 +110,9 @@ def _index(j2: Environment, fd: Sequence[_Fd]) -> bytes:
         "PATHS": (
             (
                 f.name,
-                f.rel_path,
                 f.mime,
                 _human_readable_size(f.size, precision=2),
-                f.mtime.strftime("%x %X %Z"),
+                utc_to_local(f.mtime).replace(microsecond=0).strftime("%x %X %Z"),
             )
             for f in fd
         )
@@ -136,10 +133,12 @@ def build_j2() -> Environment:
     return j2
 
 
-def head(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
-    fd = _seek(handler, root=root)
+def head(
+    j2: Environment, handler: BaseHTTPRequestHandler, base: PurePosixPath, root: Path
+) -> None:
+    fd = _seek(handler, base=base, root=root)
     if fd is None:
-        handler.send_error(HTTPStatus.NOT_FOUND, explain=None)
+        handler.send_error(HTTPStatus.NOT_FOUND)
     elif isinstance(fd, Sequence):
         index = _index(j2, fd=fd)
         _send_index_headers(handler, index=index)
@@ -147,8 +146,10 @@ def head(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
         _send_headers(handler, fd=fd)
 
 
-def get(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
-    fd = _seek(handler, root=root)
+def get(
+    j2: Environment, handler: BaseHTTPRequestHandler, base: PurePosixPath, root: Path
+) -> None:
+    fd = _seek(handler, base=base, root=root)
 
     if fd is None:
         handler.send_error(HTTPStatus.NOT_FOUND)

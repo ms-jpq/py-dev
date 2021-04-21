@@ -1,10 +1,12 @@
 from argparse import ArgumentParser, Namespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from socket import getfqdn
 
 from ..run import run_main
 from .static import build_j2, get, head
+
+_BASE = PurePosixPath("/")
 
 
 def _parse_args() -> Namespace:
@@ -26,10 +28,10 @@ def main() -> None:
 
     class Handler(BaseHTTPRequestHandler):
         def do_HEAD(self) -> None:
-            head(j2, handler=self, root=root)
+            head(j2, handler=self, base=_BASE, root=root)
 
         def do_GET(self) -> None:
-            get(j2, handler=self, root=root)
+            get(j2, handler=self, base=_BASE, root=root)
 
     httpd = ThreadingHTTPServer(bind, Handler)
     print(f"SERVING -- http://{host}:{args.port}", flush=True)
