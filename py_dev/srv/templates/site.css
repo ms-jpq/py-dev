@@ -2,11 +2,6 @@
   font-family: monospace;
 }
 
-table {
-  margin-left: auto;
-  margin-right: auto;
-}
-
 tbody tr:nth-child(even) {
   background-color: rgb(240, 240, 240);
 }
