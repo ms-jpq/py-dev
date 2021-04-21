@@ -4,7 +4,7 @@ from pathlib import Path
 from socket import getfqdn
 
 from ..run import run_main
-from .static import get, head
+from .static import build_j2, get, head
 
 
 def _parse_args() -> Namespace:
@@ -21,16 +21,17 @@ def main() -> None:
     bind = (addr, args.port)
 
     host = getfqdn() if args.open else "localhost"
-    print(f"SERVING -- http://{host}:{args.port}")
+    j2 = build_j2()
 
     class Handler(BaseHTTPRequestHandler):
         def do_HEAD(self) -> None:
-            head(self, assets_dir=args.base)
+            head(j2, handler=self, root=args.base)
 
         def do_GET(self) -> None:
-            get(self, assets_dir=args.base)
+            get(j2, handler=self, root=args.base)
 
     httpd = ThreadingHTTPServer(bind, Handler)
+    print(f"SERVING -- http://{host}:{args.port}", flush=True)
     httpd.serve_forever()
 
 
