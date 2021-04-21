@@ -2,6 +2,7 @@ from argparse import ArgumentParser, Namespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from socket import getfqdn
+from typing import Any
 
 from ..run import run_main
 from .static import build_j2, get, head
@@ -32,6 +33,9 @@ def main() -> None:
 
         def do_GET(self) -> None:
             get(j2, handler=self, base=_BASE, root=root)
+
+        def log_message(self, format: str, *args: Any) -> None:
+            pass
 
     httpd = ThreadingHTTPServer(bind, Handler)
     print(f"SERVING -- http://{host}:{args.port}", flush=True)
