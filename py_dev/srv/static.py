@@ -14,7 +14,7 @@ from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
 from stat import S_ISDIR
 from typing import Optional, Sequence, Tuple, Union
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment
 from std2.datetime import utc_to_local
@@ -70,7 +70,8 @@ def _seek(
     handler: BaseHTTPRequestHandler, base: PurePosixPath, root: Path
 ) -> Union[_Fd, Sequence[_Fd], None]:
     uri = urlsplit(handler.path)
-    path = PurePosixPath(uri.path).relative_to(base)
+    raw = unquote(uri.path)
+    path = PurePosixPath(raw).relative_to(base)
     asset = (root / path).resolve()
 
     if not is_relative_to(asset, root) or not asset.exists():
