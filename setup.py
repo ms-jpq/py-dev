@@ -21,7 +21,7 @@ setup(
     author="ms-jpq",
     author_email="github@bigly.dog",
     url="https://github.com/ms-jpq/py-dev",
-    scripts=scripts,
     packages=packages,
     package_data=package_data,
+    scripts=scripts,
 )
