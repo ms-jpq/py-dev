@@ -17,7 +17,7 @@ def _git_ls_commits() -> Iterator[Tuple[str, str]]:
             "log",
             "--relative-date",
             "--color",
-            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
+            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         ),
         text=True,
     )
