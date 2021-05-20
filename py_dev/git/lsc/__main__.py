@@ -63,6 +63,7 @@ def main() -> None:
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
         sha, _, _ = execute.partition(" ")
+        print(sha)
     else:
         commits = _git_ls_commits()
         _fzf_lhs(commits)
