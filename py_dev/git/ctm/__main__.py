@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from subprocess import check_call, check_output
+from subprocess import check_output
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -19,8 +19,8 @@ def _git_diff_single(unified: int, sha1: str, sha2: str, path: str) -> bytes:
 def _fzf_lhs(unified: int, sha1: str, sha2: str, files: bytes) -> None:
     run_fzf(
         files,
-        p_args=(sha1, sha2, f"--unified={unified}", "--preview={f1}"),
-        e_args=(sha1, sha2, f"--unified={unified}", "--execute={f1}"),
+        p_args=(sha1, sha2, f"--unified={unified}", "--preview={f}"),
+        e_args=(sha1, sha2, f"--unified={unified}", "--execute={f}"),
     )
 
 

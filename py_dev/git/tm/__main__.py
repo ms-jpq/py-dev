@@ -35,8 +35,8 @@ def _git_show_diff(unified: int, sha: str, path: str) -> bytes:
 def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
     run_fzf(
         commits,
-        p_args=(path, f"--unified={unified}", "--preview={f1}"),
-        e_args=(path, f"--unified={unified}", "--execute={f1}"),
+        p_args=(path, f"--unified={unified}", "--preview={f}"),
+        e_args=(path, f"--unified={unified}", "--execute={f}"),
     )
 
 
