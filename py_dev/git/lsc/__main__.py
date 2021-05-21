@@ -28,7 +28,7 @@ def _git_ls_commits() -> Iterator[Tuple[str, str]]:
 
 def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
-    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
+    run_fzf(stdin, p_args=("--preview={f1}",), e_args=("--execute={+f}",))
 
 
 def _git_show_commit(sha: str) -> None:
@@ -62,8 +62,9 @@ def main() -> None:
         _git_show_commit(sha)
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
-        sha, _, _ = execute.partition(" ")
-        print(sha)
+        for line in execute.split("\0"):
+            sha, _, _ = line.partition(" ")
+            print(sha)
     else:
         commits = _git_ls_commits()
         _fzf_lhs(commits)
