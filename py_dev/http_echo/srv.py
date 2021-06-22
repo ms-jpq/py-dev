@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from locale import strxfrm
 from shutil import get_terminal_size
@@ -29,7 +30,7 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
     )
     content = handler.rfile.read(content_len)
 
-    handler.send_response(200)
+    handler.send_response(HTTPStatus.OK)
     for key, val in headers.items():
         handler.send_header(key, val)
     handler.end_headers()
@@ -55,3 +56,4 @@ class EchoServer(BaseHTTPRequestHandler):
 
     def do_PUT(self) -> None:
         _echo_req(self)
+
