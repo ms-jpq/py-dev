@@ -66,10 +66,10 @@ def main() -> None:
     args = _parse_args()
 
     if args.preview:
-        sha = Path(args.preview).read_text().rstrip("\0")
+        sha, _, _ = Path(args.preview).read_text().rstrip("\0").partition(" ")
         _fzf_rhs(args.unified, sha=sha, path=args.path)
     elif args.execute:
-        sha = Path(args.execute).read_text().rstrip("\0")
+        sha, _, _ = Path(args.execute).read_text().rstrip("\0").partition(" ")
         check_call(("git", "show", f"{sha}:{args.path}"))
     else:
         commits = _git_file_log(args.path)
@@ -77,3 +77,4 @@ def main() -> None:
 
 
 run_main(main)
+
