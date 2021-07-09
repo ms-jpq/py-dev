@@ -7,7 +7,7 @@ from ...run import run_main
 def main() -> None:
     args = argv[1:]
     check_call(("git", *args))
-    check_call(("git", "submodules", "foreach", "--recursive", *args))
+    check_call(("git", "submodule", "foreach", "--recursive", *args))
 
 
 run_main(main)
