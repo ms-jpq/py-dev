@@ -1,14 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import format_datetime
-from functools import partial
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
-from itertools import count
-from locale import str as format_float
 from locale import strxfrm
 from mimetypes import guess_type
-from operator import pow
 from os import sep
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
@@ -18,6 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment
 from std2.datetime import utc_to_local
+from std2.locale import si_prefixed
 from std2.pathlib import is_relative_to
 
 from ..j2 import build, render
@@ -103,26 +100,13 @@ def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
     handler.end_headers()
 
 
-def _human_readable_size(size: float, precision: int = 3) -> str:
-    units = ("", "K", "M", "G", "T", "P", "E", "Z", "Y")
-    step = partial(pow, 10)
-    steps = zip(map(step, count(0, step=3)), units)
-    for factor, unit in steps:
-        divided = size / factor
-        if abs(divided) < 1000:
-            fmt = format_float(round(divided, precision))
-            return f"{fmt}{unit}"
-    else:
-        raise ValueError(f"unit over flow: {size}")
-
-
 def _index(j2: Environment, fd: Sequence[_Fd]) -> bytes:
     env = {
         "PATHS": (
             (
                 f.name,
                 f.mime,
-                _human_readable_size(f.size, precision=2),
+                si_prefixed(f.size, precision=2),
                 utc_to_local(f.mtime).replace(microsecond=0).strftime("%x %X %Z"),
             )
             for f in fd
@@ -172,3 +156,4 @@ def get(
         _send_headers(handler, fd=fd)
         with fd.path.open("rb") as pp:
             copyfileobj(pp, handler.wfile)
+

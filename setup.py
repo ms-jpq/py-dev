@@ -14,7 +14,7 @@ setup(
     name="py_dev",
     python_requires=">=3.8.0",
     install_requires=install_requires,
-    version="0.1.20",
+    version="0.1.26",
     description="python dev tools",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
@@ -25,3 +25,4 @@ setup(
     package_data=package_data,
     scripts=scripts,
 )
+
