@@ -22,7 +22,7 @@ async def run_fzf(stdin: bytes, p_args: Iterable[str], e_args: Iterable[str]) ->
         *_SHARED_OPTS,
         rhs,
         fin,
-        env={**environ, "SHELL": EXEC_SELF},
+        env={**environ, "LC_ALL": "C", "SHELL": EXEC_SELF},
         stdin=stdin,
         capture_stdout=False,
         capture_stderr=False,
