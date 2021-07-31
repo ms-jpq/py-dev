@@ -4,8 +4,6 @@ from argparse import ArgumentParser, Namespace
 from http.server import ThreadingHTTPServer
 from socket import getfqdn
 
-from std2.asyncio import run_in_executor
-
 from ..run import run_main
 from .srv import EchoServer
 
@@ -25,7 +23,7 @@ async def main() -> int:
     httpd = ThreadingHTTPServer(bind, EchoServer)
     host = getfqdn() if args.open else "localhost"
     print(f"SERVING -- http://{host}:{args.port}")
-    await run_in_executor(httpd.serve_forever)
+    httpd.serve_forever()
 
     return 0
 

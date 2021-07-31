@@ -4,8 +4,6 @@ from pathlib import Path, PurePosixPath
 from socket import getfqdn
 from typing import Any
 
-from std2.asyncio import run_in_executor
-
 from ..run import run_main
 from .static import build_j2, get, head
 
@@ -41,7 +39,7 @@ async def main() -> int:
     httpd = ThreadingHTTPServer(bind, Handler)
     host = getfqdn() if args.open else "localhost"
     print(f"SERVING -- http://{host}:{args.port}", flush=True)
-    await run_in_executor(httpd.serve_forever)
+    httpd.serve_forever()
 
     return 0
 
