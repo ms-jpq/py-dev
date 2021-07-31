@@ -1,14 +1,27 @@
-from subprocess import check_call
 from sys import argv
+
+from std2.asyncio.subprocess import call
 
 from ...run import run_main
 
 
-def main() -> None:
+async def main() -> int:
     args = argv[1:]
-    check_call(args)
-    check_call(("git", "submodule", "foreach", "--recursive", *args))
+    await call(
+        *args,
+        capture_stdout=False,
+        capture_stderr=False,
+    )
+    await call(
+        "git",
+        "submodule",
+        "foreach",
+        "--recursive",
+        *args,
+        capture_stdout=False,
+        capture_stderr=False,
+    )
+    return 0
 
 
-run_main(main)
-
+run_main(main())

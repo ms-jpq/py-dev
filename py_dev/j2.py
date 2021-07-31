@@ -1,16 +1,16 @@
-from pathlib import Path, PurePath
+from pathlib import PurePath
 from typing import Any, Mapping
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 
-def build(*base: Path) -> Environment:
+def build(path: PurePath, *paths: PurePath) -> Environment:
     j2 = Environment(
         enable_async=False,
         trim_blocks=True,
         lstrip_blocks=True,
         undefined=StrictUndefined,
-        loader=FileSystemLoader(base, followlinks=True),
+        loader=FileSystemLoader((path, *paths), followlinks=True),
     )
     return j2
 

@@ -1,33 +1,52 @@
-from concurrent.futures import ThreadPoolExecutor
-from subprocess import check_call, check_output
+from asyncio import gather
+
+from std2.asyncio.subprocess import call
 
 from ...run import run_main
 
 
-def _switch(path: str) -> None:
-    raw = check_output(
-        (
-            "git",
-            "rev-parse",
-            "--abbrev-ref",
-            "origin/HEAD",
-        ),
-        text=True,
+async def _switch(path: str) -> None:
+    proc = await call(
+        "git",
+        "rev-parse",
+        "--abbrev-ref",
+        "origin/HEAD",
         cwd=path,
+        capture_stderr=False,
     )
 
-    origin_main = raw.strip()
+    origin_main = proc.out.decode().strip()
     _, _, main = origin_main.partition("/")
-    check_call(("git", "checkout", origin_main), cwd=path)
-    check_call(("git", "switch", main), cwd=path)
+    await call(
+        "git",
+        "checkout",
+        origin_main,
+        cwd=path,
+        capture_stdout=False,
+        capture_stderr=False,
+    )
+    await call(
+        "git",
+        "switch",
+        main,
+        cwd=path,
+        capture_stdout=False,
+        capture_stderr=False,
+    )
 
 
-def main() -> None:
-    with ThreadPoolExecutor() as pool:
-        raw = check_output(
-            ("git", "submodule", "foreach", "--recursive", "--quiet", "pwd"), text=True
-        )
-        tuple(pool.map(_switch, raw.splitlines()))
+async def main() -> int:
+    proc = await call(
+        "git",
+        "submodule",
+        "foreach",
+        "--recursive",
+        "--quiet",
+        "pwd",
+        capture_stderr=False,
+    )
+    await gather(*map(_switch, proc.out.decode().splitlines()))
+    return 0
 
 
-run_main(main)
+run_main(main())

@@ -1,8 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from os import linesep
 from pathlib import Path
-from subprocess import check_output
-from typing import Iterator, Tuple
+from typing import AsyncIterator, Iterable, Iterator, Tuple
+
+from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -10,20 +11,18 @@ from ..ops import git_show_many, pprn
 from ..spec_parse import spec_parse
 
 
-def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
-    out = check_output(
-        (
-            "git",
-            "log",
-            "--diff-filter=D",
-            "--name-only",
-            "--relative-date",
-            "--color=always",
-            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
-        ),
-        text=True,
+async def _git_dead_files() -> AsyncIterator[Tuple[str, str, str]]:
+    proc = await call(
+        "git",
+        "log",
+        "--diff-filter=D",
+        "--name-only",
+        "--relative-date",
+        "--color=always",
+        "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
+        capture_stderr=False,
     )
-    for commit in out.strip("\0").split("\0"):
+    for commit in proc.out.decode().strip("\0").split("\0"):
         meta, *paths = commit.split(linesep)
         sha, _, date = meta.partition(" ")
         for path in paths:
@@ -31,15 +30,20 @@ def _git_dead_files() -> Iterator[Tuple[str, str, str]]:
                 yield f"{sha}~", date, path
 
 
-def _fzf_lhs(paths: Iterator[Tuple[str, str, str]]) -> None:
+async def _fzf_lhs(paths: Iterable[Tuple[str, str, str]]) -> None:
     lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
     stdin = "\0".join(lines).encode()
-    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
 
 
-def _fzf_rhs(sha: str, path: str) -> None:
-    content = check_output(("git", "show", f"{sha}:{path}"))
-    pprn(content, path=path)
+async def _fzf_rhs(sha: str, path: str) -> None:
+    proc = await call(
+        "git",
+        "show",
+        f"{sha}:{path}",
+        capture_stderr=False,
+    )
+    await pprn(proc.out, path=path)
 
 
 def _parse_args() -> Namespace:
@@ -50,12 +54,12 @@ def _parse_args() -> Namespace:
     return spec_parse(parser)
 
 
-def main() -> None:
+async def main() -> int:
     args = _parse_args()
     if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, path = preview.split(linesep)
-        _fzf_rhs(sha, path=path)
+        await _fzf_rhs(sha, path=path)
     elif args.execute:
         lines = Path(args.execute).read_text().rstrip("\0").split("\0")
 
@@ -64,10 +68,12 @@ def main() -> None:
                 sha, _, path = line.split(linesep)
                 yield sha, path
 
-        git_show_many(cont())
+        await git_show_many(cont())
     else:
-        paths = _git_dead_files()
-        _fzf_lhs(paths)
+        paths = [path async for path in _git_dead_files()]
+        await _fzf_lhs(paths)
+
+    return 0
 
 
-run_main(main)
+run_main(main())

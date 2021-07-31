@@ -4,6 +4,9 @@ from pathlib import Path, PurePosixPath
 from socket import getfqdn
 from typing import Any
 
+from std2.asyncio import go, run_in_executor
+
+from ..log import log
 from ..run import run_main
 from .static import build_j2, get, head
 
@@ -18,7 +21,7 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
+async def main() -> int:
     args = _parse_args()
     addr = "" if args.open else "localhost"
     bind = (addr, args.port)
@@ -38,8 +41,18 @@ def main() -> None:
             pass
 
     httpd = ThreadingHTTPServer(bind, Handler)
+
+    t = go(log, aw=run_in_executor(httpd.serve_forever))
     print(f"SERVING -- http://{host}:{args.port}", flush=True)
-    httpd.serve_forever()
+    try:
+        await t
+    except KeyboardInterrupt:
+        await run_in_executor(httpd.shutdown)
+        raise
+    finally:
+        await t
+
+    return 0
 
 
-run_main(main)
+run_main(main())

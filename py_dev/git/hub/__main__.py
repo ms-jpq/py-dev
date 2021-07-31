@@ -1,6 +1,6 @@
-from subprocess import check_output
 from webbrowser import open as open_w
 
+from std2.asyncio.subprocess import call
 from std2.string import removeprefix, removesuffix
 
 from ...run import run_main
@@ -16,17 +16,28 @@ def _p_uri(uri: str, branch: str) -> str:
         raise ValueError(f"Cannot parse {uri} into https://...")
 
 
-def main() -> None:
-    upstream = check_output(
-        ("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"),
-        text=True,
-    ).strip()
-    remote, _, branch = upstream.partition("/")
-    uri = check_output(("git", "remote", "get-url", remote), text=True).strip()
+async def main() -> int:
+    proc = await call(
+        "git",
+        "rev-parse",
+        "--abbrev-ref",
+        "--symbolic-full-name",
+        "@{upstream}",
+        capture_stderr=False,
+    )
+    remote, _, branch = proc.out.decode().strip().partition("/")
+    proc = await call(
+        "git",
+        "remote",
+        "get-url",
+        remote,
+        capture_stderr=False,
+    )
 
-    clean_uri = _p_uri(uri, branch=branch)
+    clean_uri = _p_uri(proc.out.decode().strip(), branch=branch)
     open_w(clean_uri)
     print(clean_uri)
+    return 0
 
 
-run_main(main)
+run_main(main())

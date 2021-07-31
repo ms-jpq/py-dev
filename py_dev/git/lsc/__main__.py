@@ -1,8 +1,10 @@
 from argparse import ArgumentParser, Namespace
+from asyncio import gather
 from os import linesep
 from pathlib import Path
-from subprocess import check_call, check_output
-from typing import Iterable, Iterator, Tuple
+from typing import AsyncIterator, Iterable, Tuple
+
+from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -10,40 +12,47 @@ from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
-def _git_ls_commits() -> Iterator[Tuple[str, str]]:
-    out = check_output(
-        (
-            "git",
-            "log",
-            "--relative-date",
-            "--color",
-            "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
-        ),
-        text=True,
+async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
+    proc = await call(
+        "git",
+        "log",
+        "--relative-date",
+        "--color",
+        "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
+        capture_stderr=False,
     )
-    for commit in out.strip("\0").split("\0"):
+    for commit in proc.out.decode().strip("\0").split("\0"):
         sha, _, date = commit.partition(" ")
         yield sha, date
 
 
-def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
+async def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
-    run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
 
 
-def _git_show_commit(sha: str) -> None:
-    check_call(("git", "show", "--submodule", "--stat", "--color", sha))
-    print(linesep * 3)
-    diffs = check_output(
-        (
-            "git",
-            "show",
-            "--submodule",
-            "--pretty=format:",
-            sha,
-        )
+async def _git_show_commit(sha: str) -> None:
+    c1 = call(
+        "git",
+        "show",
+        "--submodule",
+        "--stat",
+        "--color",
+        sha,
+        capture_stdout=False,
+        capture_stderr=False,
     )
-    pretty_diff(diffs, path=None)
+    c2 = call(
+        "git",
+        "show",
+        "--submodule",
+        "--pretty=format:",
+        sha,
+        capture_stderr=False,
+    )
+    _, proc = await gather(c1, c2)
+    print(linesep * 3)
+    await pretty_diff(proc.out, path=None)
 
 
 def _parse_args() -> Namespace:
@@ -54,20 +63,22 @@ def _parse_args() -> Namespace:
     return spec_parse(parser)
 
 
-def main() -> None:
+async def main() -> int:
     args = _parse_args()
     if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, _ = preview.partition(" ")
-        _git_show_commit(sha)
+        await _git_show_commit(sha)
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
         for line in execute.split("\0"):
             sha, _, _ = line.partition(" ")
             print(sha)
     else:
-        commits = _git_ls_commits()
-        _fzf_lhs(commits)
+        commits = [el async for el in _git_ls_commits()]
+        await _fzf_lhs(commits)
+
+    return 0
 
 
-run_main(main)
+run_main(main())

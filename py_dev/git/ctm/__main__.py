@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from subprocess import check_output
+
+from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -8,25 +9,44 @@ from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
-def _git_file_diff(sha1: str, sha2: str) -> bytes:
-    return check_output(("git", "diff", "--name-only", "-z", sha1, sha2)).strip(b"\0")
+async def _git_file_diff(sha1: str, sha2: str) -> bytes:
+    proc = await call(
+        "git",
+        "diff",
+        "--name-only",
+        "-z",
+        sha1,
+        sha2,
+        capture_stderr=False,
+    )
+    return proc.out.strip(b"\0")
 
 
-def _git_diff_single(unified: int, sha1: str, sha2: str, path: str) -> bytes:
-    return check_output(("git", "diff", f"--unified={unified}", sha1, sha2, "--", path))
+async def _git_diff_single(unified: int, sha1: str, sha2: str, path: str) -> bytes:
+    proc = await call(
+        "git",
+        "diff",
+        f"--unified={unified}",
+        sha1,
+        sha2,
+        "--",
+        path,
+        capture_stderr=False,
+    )
+    return proc.out
 
 
-def _fzf_lhs(unified: int, sha1: str, sha2: str, files: bytes) -> None:
-    run_fzf(
+async def _fzf_lhs(unified: int, sha1: str, sha2: str, files: bytes) -> None:
+    await run_fzf(
         files,
         p_args=(sha1, sha2, f"--unified={unified}", "--preview={f}"),
         e_args=(sha1, sha2, f"--unified={unified}", "--execute={f}"),
     )
 
 
-def _fzf_rhs(unified: int, sha1: str, sha2: str, path: str) -> None:
-    diff = _git_diff_single(unified, sha1=sha1, sha2=sha2, path=path)
-    pretty_diff(diff, path=path)
+async def _fzf_rhs(unified: int, sha1: str, sha2: str, path: str) -> None:
+    diff = await _git_diff_single(unified, sha1=sha1, sha2=sha2, path=path)
+    await pretty_diff(diff, path=path)
 
 
 def _parse_args() -> Namespace:
@@ -43,18 +63,20 @@ def _parse_args() -> Namespace:
     return spec_parse(parser)
 
 
-def main() -> None:
+async def main() -> int:
     args = _parse_args()
 
     if args.preview:
         path = Path(args.preview).read_text().rstrip("\0")
-        _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
+        await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
     elif args.execute:
         path = Path(args.execute).read_text().rstrip("\0")
-        _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
+        await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
     else:
-        commits = _git_file_diff(sha1=args.sha1, sha2=args.sha2)
-        _fzf_lhs(args.unified, sha1=args.sha1, sha2=args.sha2, files=commits)
+        commits = await _git_file_diff(sha1=args.sha1, sha2=args.sha2)
+        await _fzf_lhs(args.unified, sha1=args.sha1, sha2=args.sha2, files=commits)
+
+    return 0
 
 
-run_main(main)
+run_main(main())

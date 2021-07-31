@@ -29,13 +29,14 @@ def _arg_parse() -> Namespace:
     return args
 
 
-def main() -> None:
+async def main() -> int:
     args = _arg_parse()
     text = stdin.read() if args.stdin or not args.name else Path(args.name).read_text()
     pretty = pprn(
         format=args.formatter, theme=args.theme, filename=args.name, text=text
     )
     print(pretty, end="")
+    return 0
 
 
-run_main(main)
+run_main(main())
