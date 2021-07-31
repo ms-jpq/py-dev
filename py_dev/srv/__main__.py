@@ -4,9 +4,8 @@ from pathlib import Path, PurePosixPath
 from socket import getfqdn
 from typing import Any
 
-from std2.asyncio import go, run_in_executor
+from std2.asyncio import run_in_executor
 
-from ..log import log
 from ..run import run_main
 from .static import build_j2, get, head
 
@@ -27,7 +26,6 @@ async def main() -> int:
     bind = (addr, args.port)
     root = Path(args.root).resolve()
 
-    host = getfqdn() if args.open else "localhost"
     j2 = build_j2()
 
     class Handler(BaseHTTPRequestHandler):
@@ -41,16 +39,9 @@ async def main() -> int:
             pass
 
     httpd = ThreadingHTTPServer(bind, Handler)
-
-    t = go(log, aw=run_in_executor(httpd.serve_forever))
+    host = getfqdn() if args.open else "localhost"
     print(f"SERVING -- http://{host}:{args.port}", flush=True)
-    try:
-        await t
-    except KeyboardInterrupt:
-        await run_in_executor(httpd.shutdown)
-        raise
-    finally:
-        await t
+    await run_in_executor(httpd.serve_forever)
 
     return 0
 
