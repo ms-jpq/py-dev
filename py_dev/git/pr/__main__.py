@@ -25,7 +25,7 @@ async def main() -> int:
         "git",
         "fetch",
         "origin",
-        f"pull/{pr_id}/HEAD:{br_name}",
+        f"pull/{pr_id}/head:{br_name}",
         capture_stdout=False,
         capture_stderr=False,
     )
