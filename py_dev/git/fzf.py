@@ -26,4 +26,5 @@ async def run_fzf(stdin: bytes, p_args: Iterable[str], e_args: Iterable[str]) ->
         stdin=stdin,
         capture_stdout=False,
         capture_stderr=False,
+        check_returncode={0, 130}
     )
