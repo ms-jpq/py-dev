@@ -33,7 +33,6 @@ async def main() -> int:
     await call(
         "git",
         "checkout",
-        "--",
         br_name,
         capture_stdout=False,
         capture_stderr=False,
