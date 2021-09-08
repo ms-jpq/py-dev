@@ -9,9 +9,11 @@
     </style>
   </head>
   <body>
+    <a rel="noreferrer" href=".."><<<</a>
+    <hr />
+    <p>{{ PATH | e }}</p>
+    <hr />
     <table>
-      <a rel="noreferrer" href=".."><<<</a>
-      <hr>
       <thead>
         <tr>
           <th>Name</th>
@@ -26,13 +28,12 @@
           <td>
             <a rel="noreferrer" href="{{ NAME | urlencode }}">{{ NAME | e }}</a>
           </td>
-          <td>{{ TYPE or "" }}</td>
-          <td>{{ SIZE }}</td>
-          <td>{{ MTIME }}</td>
+          <td>{{ (TYPE or "") | e }}</td>
+          <td>{{ SIZE | e }}</td>
+          <td>{{ MTIME | e }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </body>
 </html>
-

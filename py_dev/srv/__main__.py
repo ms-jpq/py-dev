@@ -1,13 +1,12 @@
 from argparse import ArgumentParser, Namespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from socket import getfqdn
 from typing import Any
 
+from ..log import log
 from ..run import run_main
 from .static import build_j2, get, head
-
-_BASE = PurePosixPath("/")
 
 
 def _parse_args() -> Namespace:
@@ -22,26 +21,30 @@ async def main() -> int:
     args = _parse_args()
     addr = "" if args.open else "localhost"
     bind = (addr, args.port)
-    root = Path(args.root).resolve()
+    try:
+        root = Path(args.root).resolve(strict=True)
+    except OSError as e:
+        log.critical("%s", e)
+        return 1
+    else:
+        j2 = build_j2()
 
-    j2 = build_j2()
+        class Handler(BaseHTTPRequestHandler):
+            def do_HEAD(self) -> None:
+                head(j2, handler=self, root=root)
 
-    class Handler(BaseHTTPRequestHandler):
-        def do_HEAD(self) -> None:
-            head(j2, handler=self, base=_BASE, root=root)
+            def do_GET(self) -> None:
+                get(j2, handler=self, root=root)
 
-        def do_GET(self) -> None:
-            get(j2, handler=self, base=_BASE, root=root)
+            def log_message(self, format: str, *args: Any) -> None:
+                pass
 
-        def log_message(self, format: str, *args: Any) -> None:
-            pass
+        httpd = ThreadingHTTPServer(bind, Handler)
+        host = getfqdn() if args.open else "localhost"
+        print(f"SERVING -- http://{host}:{args.port}", flush=True)
+        httpd.serve_forever()
 
-    httpd = ThreadingHTTPServer(bind, Handler)
-    host = getfqdn() if args.open else "localhost"
-    print(f"SERVING -- http://{host}:{args.port}", flush=True)
-    httpd.serve_forever()
-
-    return 0
+        return 0
 
 
 run_main(main())
