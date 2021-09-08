@@ -1,6 +1,6 @@
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from email.utils import format_datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
@@ -14,6 +14,7 @@ from typing import Iterator, Optional, Sequence, Tuple, Union
 from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment
+from std2.datetime import utc_to_local
 from std2.locale import si_prefixed
 from std2.pathlib import is_relative_to
 
@@ -45,7 +46,7 @@ def _fd(root: PurePath, path: Path, stat: stat_result) -> _Fd:
     else:
         mime, _ = guess_type(path, strict=False)
 
-    mtime = datetime.fromtimestamp(stat.st_mtime)
+    mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
     fd = _Fd(
         path=path,
         sortby=sortby,
@@ -111,7 +112,7 @@ def _index(j2: Environment, fd: Tuple[_Fd, ...]) -> bytes:
                 f.name,
                 f.mime,
                 si_prefixed(f.size, precision=2),
-                f.mtime.replace(microsecond=0).strftime("%x %X %Z"),
+                utc_to_local(f.mtime).replace(microsecond=0).strftime("%x %X %Z"),
             )
             for f in fds
         ),
