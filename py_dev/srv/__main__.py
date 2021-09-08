@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from os import curdir
+from os import curdir, linesep
 from os.path import normcase
 from pathlib import Path, PurePath
 from socket import getfqdn
@@ -26,7 +26,7 @@ async def main() -> int:
     try:
         root = Path(normcase(args.root)).resolve(strict=True)
     except OSError as e:
-        print(e, file=stderr)
+        print(args.root, e, sep=linesep, file=stderr)
         return 1
     else:
         j2 = build_j2()
