@@ -1,5 +1,6 @@
 :root {
   font-family: monospace;
+  box-sizing: content-box;
 }
 
 tbody tr:nth-child(even) {
@@ -10,6 +11,7 @@ th {
   text-align: left;
 }
 
-th, td {
+th,
+td {
   padding-right: 2em;
 }
