@@ -9,31 +9,37 @@
     </style>
   </head>
   <body>
-    <a rel="noreferrer" href=".."><<<</a>
-    <hr />
-    <p>{{ PATH | e }}</p>
-    <hr />
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Size</th>
-          <th>M-Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for NAME, TYPE, SIZE, MTIME in PATHS %}
-        <tr>
-          <td>
-            <a rel="noreferrer" href="{{ NAME | urlencode }}">{{ NAME | e }}</a>
-          </td>
-          <td>{{ (TYPE or "") | e }}</td>
-          <td>{{ SIZE | e }}</td>
-          <td>{{ MTIME | e }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <header>
+      <a rel="noreferrer" href=".."><<<</a>
+      <hr />
+      <p>{{ PATH | e }}</p>
+      <hr />
+    </header>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>M-Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for NAME, TYPE, SIZE, MTIME in PATHS %}
+          <tr>
+            <td>
+              <a rel="noreferrer" href="{{ NAME | urlencode }}"
+                >{{ NAME | e }}</a
+              >
+            </td>
+            <td>{{ (TYPE or "") | e }}</td>
+            <td>{{ SIZE | e }}</td>
+            <td>{{ MTIME | e }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </main>
   </body>
 </html>
