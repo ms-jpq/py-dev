@@ -4,9 +4,9 @@ from os import curdir
 from os.path import normcase
 from pathlib import Path, PurePath
 from socket import getfqdn
+from sys import stderr
 from typing import Any
 
-from ..log import log
 from ..run import run_main
 from .static import build_j2, get, head
 
@@ -26,7 +26,7 @@ async def main() -> int:
     try:
         root = Path(normcase(args.root)).resolve(strict=True)
     except OSError as e:
-        log.critical("%s", e)
+        print(e, file=stderr)
         return 1
     else:
         j2 = build_j2()
