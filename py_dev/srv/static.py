@@ -118,8 +118,8 @@ def _index(j2: Environment, fd: Tuple[_Fd, ...]) -> bytes:
             for f in fds
         ),
     }
-    index = render(j2, path=_INDEX, env=env)
-    return index.encode()
+    html = render(j2, path=_INDEX, env=env)
+    return html.encode("UTF-8")
 
 
 def _send_index_headers(handler: BaseHTTPRequestHandler, index: bytes) -> None:
