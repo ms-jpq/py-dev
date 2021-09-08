@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler
 from locale import strxfrm
 from mimetypes import guess_type
 from os import altsep, scandir, sep, stat_result
+from os.path import normcase
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
 from stat import S_ISDIR
@@ -38,7 +39,7 @@ class _Fd:
 def _fd(root: PurePath, path: Path, stat: stat_result) -> _Fd:
     is_dir = S_ISDIR(stat.st_mode)
     sortby = (not is_dir, strxfrm(path.suffix), strxfrm(path.stem))
-    rel_path = path.relative_to(root)
+    rel_path = PurePath(normcase(path.relative_to(root)))
     name = path.name + sep if is_dir else path.name
 
     if is_dir:
@@ -64,7 +65,7 @@ def _seek(
 ) -> Union[_Fd, Tuple[_Fd, ...], None]:
     uri = urlsplit(handler.path)
     raw = unquote(uri.path)
-    path = PurePosixPath(raw).relative_to(PurePosixPath(altsep or sep))
+    path = PurePosixPath(normcase(raw)).relative_to(PurePosixPath(altsep or sep))
 
     try:
         asset = (root / path).resolve(strict=True)

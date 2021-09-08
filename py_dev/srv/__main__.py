@@ -1,6 +1,8 @@
 from argparse import ArgumentParser, Namespace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from os import curdir
+from os.path import normcase
+from pathlib import Path, PurePath
 from socket import getfqdn
 from typing import Any
 
@@ -11,7 +13,7 @@ from .static import build_j2, get, head
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("root", nargs="?", type=Path, default=Path("."))
+    parser.add_argument("root", nargs="?", type=PurePath, default=PurePath(curdir))
     parser.add_argument("-o", "--open", action="store_true")
     parser.add_argument("-p", "--port", type=int, default=8080)
     return parser.parse_args()
@@ -22,7 +24,7 @@ async def main() -> int:
     addr = "" if args.open else "localhost"
     bind = (addr, args.port)
     try:
-        root = Path(args.root).resolve(strict=True)
+        root = Path(normcase(args.root)).resolve(strict=True)
     except OSError as e:
         log.critical("%s", e)
         return 1
