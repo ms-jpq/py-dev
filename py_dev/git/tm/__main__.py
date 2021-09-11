@@ -60,7 +60,7 @@ async def _fzf_rhs(unified: int, sha: str, path: str) -> None:
         diff = await _git_show_diff(unified, sha=sha, path=path)
         await pretty_diff(diff, path=path)
     else:
-        content = await _git_show_file("~{sha}", path=path)
+        content = await _git_show_file("{sha}~", path=path)
         await pprn(content, path=path)
 
 
