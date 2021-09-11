@@ -2,7 +2,6 @@ from argparse import ArgumentParser, Namespace
 from sys import argv
 
 EOF = "\04"
-EXEC_SELF = argv[0]
 
 
 def spec_parse(parser: ArgumentParser) -> Namespace:

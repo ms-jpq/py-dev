@@ -1,9 +1,10 @@
 from os import environ
+from sys import executable
 from typing import Iterable
 
 from std2.asyncio.subprocess import call
 
-from .spec_parse import EOF, EXEC_SELF
+from .spec_parse import EOF
 
 _SHARED_OPTS = (
     "--read0",
@@ -22,9 +23,9 @@ async def run_fzf(stdin: bytes, p_args: Iterable[str], e_args: Iterable[str]) ->
         *_SHARED_OPTS,
         rhs,
         fin,
-        env={**environ, "LC_ALL": "C", "SHELL": EXEC_SELF},
+        env={**environ, "LC_ALL": "C", "SHELL": executable},
         stdin=stdin,
         capture_stdout=False,
         capture_stderr=False,
-        check_returncode={0, 130}
+        check_returncode={0, 130},
     )
