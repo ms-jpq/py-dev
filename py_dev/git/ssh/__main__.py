@@ -59,7 +59,10 @@ async def main() -> int:
             await _set_uri(remote, uri=new_uri)
         else:
             raise ValueError(f"Cannot parse {uri}")
+    else:
+        new_uri = uri
 
+    print(new_uri)
     return 0
 
 
