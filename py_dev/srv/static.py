@@ -91,8 +91,8 @@ def _seek(
                         for scan in scandir(asset):
                             with suppress(OSError):
                                 stat = scan.stat()
-                            fd = _fd(root, path=Path(scan), stat=stat)
-                            yield fd
+                                fd = _fd(root, path=Path(scan), stat=stat)
+                                yield fd
 
                 return (fd, *sorted(cont(), key=lambda f: f.sortby))
 
