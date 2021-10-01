@@ -1,3 +1,4 @@
+from urllib.parse import urlsplit
 from webbrowser import open as open_w
 
 from std2.asyncio.subprocess import call
@@ -7,7 +8,7 @@ from ...run import run_main
 
 
 def _p_uri(uri: str, branch: str) -> str:
-    if uri.startswith("http"):
+    if urlsplit(uri).scheme in {"http", "https"}:
         return uri
     elif uri.startswith("git@github.com:"):
         location = removesuffix(removeprefix(uri, "git@github.com:"), ".git")
@@ -33,8 +34,9 @@ async def main() -> int:
         remote,
         capture_stderr=False,
     )
+    uri = proc.out.decode().strip()
 
-    clean_uri = _p_uri(proc.out.decode().strip(), branch=branch)
+    clean_uri = _p_uri(uri, branch=branch)
     open_w(clean_uri)
     print(clean_uri)
     return 0
