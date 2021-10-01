@@ -1,3 +1,4 @@
+from typing import Tuple
 from urllib.parse import urlsplit
 from webbrowser import open as open_w
 
@@ -7,17 +8,7 @@ from std2.string import removeprefix, removesuffix
 from ...run import run_main
 
 
-def _p_uri(uri: str, branch: str) -> str:
-    if urlsplit(uri).scheme in {"http", "https"}:
-        return uri
-    elif uri.startswith("git@github.com:"):
-        location = removesuffix(removeprefix(uri, "git@github.com:"), ".git")
-        return f"https://github.com/{location}/tree/{branch}"
-    else:
-        raise ValueError(f"Cannot parse {uri} into https://...")
-
-
-async def main() -> int:
+async def _git_uri() -> Tuple[str, str]:
     proc = await call(
         "git",
         "rev-parse",
@@ -35,7 +26,22 @@ async def main() -> int:
         capture_stderr=False,
     )
     uri = proc.out.decode().strip()
+    return branch, uri
 
+
+def _p_uri(uri: str, branch: str) -> str:
+    github_prefix = "git@github.com:"
+    if urlsplit(uri).scheme in {"http", "https"}:
+        return uri
+    elif uri.startswith(github_prefix):
+        location = removesuffix(removeprefix(uri, github_prefix), ".git")
+        return f"https://github.com/{location}/tree/{branch}"
+    else:
+        raise ValueError(f"Cannot parse {uri} into https://...")
+
+
+async def main() -> int:
+    branch, uri = await _git_uri()
     clean_uri = _p_uri(uri, branch=branch)
     open_w(clean_uri)
     print(clean_uri)
