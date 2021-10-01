@@ -11,12 +11,14 @@ from ..log import log
 
 def _log(method: str, path: str, headers: Mapping[str, Any], content: bytes) -> None:
     def cont() -> Iterator[str]:
-        yield f"{method.ljust(10)} {path}"
+        yield f"{method} {path}"
         for key, val in headers.items():
-            yield "::Headers::"
             yield f"{key}: {val}"
+
         if body := content.decode("UTF-8", errors="replace"):
-            yield "::Body::"
+            if headers:
+                for _ in range(2):
+                    yield ""
             yield body
 
     lines = linesep.join(cont())
@@ -34,12 +36,8 @@ def _echo_req(handler: BaseHTTPRequestHandler) -> None:
         (int(val) for key, val in headers.items() if key.lower() == "content-length"), 0
     )
     content = handler.rfile.read(content_len)
-
-    handler.send_response(HTTPStatus.OK)
-    for key, val in headers.items():
-        handler.send_header(key, val)
+    handler.send_response_only(HTTPStatus.OK)
     handler.end_headers()
-    handler.wfile.write(content)
 
     _log(
         method=handler.command,

@@ -97,7 +97,7 @@ def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
     mimetype = fd.mime or "application/octet-stream"
     last_mod = format_datetime(fd.mtime, usegmt=True)
 
-    handler.send_response(HTTPStatus.OK)
+    handler.send_response_only(HTTPStatus.OK)
     handler.send_header("Content-Type", value=mimetype)
     handler.send_header("Content-Length", str(fd.size))
     handler.send_header("Last-Modified", last_mod)
@@ -123,7 +123,7 @@ def _index(j2: Environment, fd: Tuple[_Fd, ...]) -> bytes:
 
 
 def _send_index_headers(handler: BaseHTTPRequestHandler, index: bytes) -> None:
-    handler.send_response(HTTPStatus.OK)
+    handler.send_response_only(HTTPStatus.OK)
     handler.send_header("Content-Type", value="text/html")
     handler.send_header("Content-Length", str(len(index)))
     handler.end_headers()
