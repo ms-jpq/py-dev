@@ -6,6 +6,8 @@ from pathlib import Path, PurePath
 from socket import getfqdn
 from typing import Any
 
+from std2.shutil import hr_print
+
 from ..log import log
 from ..run import run_main
 from .static import build_j2, get, head
@@ -26,7 +28,7 @@ async def main() -> int:
     try:
         root = Path(normcase(args.root)).resolve(strict=True)
     except OSError as e:
-        log.fatal("%s", f"{args.root}{linesep}{e}")
+        log.fatal("%s", hr_print(f"{args.root}{linesep}{e}"))
         return 1
     else:
         j2 = build_j2()
@@ -43,7 +45,7 @@ async def main() -> int:
 
         httpd = ThreadingHTTPServer(bind, Handler)
         host = getfqdn() if args.open else "localhost"
-        log.info("%s", f"SERVING -- http://{host}:{args.port}")
+        log.info("%s", hr_print(f"SERVING -- http://{host}:{args.port}"))
         httpd.serve_forever()
 
         return 0
