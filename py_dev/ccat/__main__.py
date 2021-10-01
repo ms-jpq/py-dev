@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from sys import stdin
+from sys import stdin, stdout
 
 from pygments.formatters._mapping import FORMATTERS
 from pygments.styles import get_all_styles
@@ -35,7 +35,7 @@ async def main() -> int:
     pretty = pprn(
         format=args.formatter, theme=args.theme, filename=args.name, text=text
     )
-    print(pretty, end="")
+    stdout.write(pretty)
     return 0
 
 

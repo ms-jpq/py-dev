@@ -2,9 +2,11 @@ from argparse import ArgumentParser, Namespace
 from asyncio import gather
 from os import linesep
 from pathlib import Path
+from sys import stdout
 from typing import AsyncIterator, Iterable, Tuple
 
 from std2.asyncio.subprocess import call
+from std2.shutil import hr_print
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -51,7 +53,7 @@ async def _git_show_commit(sha: str) -> None:
         capture_stderr=False,
     )
     _, proc = await gather(c1, c2)
-    print(linesep * 3)
+    stdout.write(linesep * 3)
     await pretty_diff(proc.out, path=None)
 
 
@@ -73,7 +75,9 @@ async def main() -> int:
         execute = Path(args.execute).read_text().rstrip("\0")
         for line in execute.split("\0"):
             sha, _, _ = line.partition(" ")
-            print(sha)
+            from ...log import log
+
+            log.info("%s", hr_print(sha))
     else:
         commits = [el async for el in _git_ls_commits()]
         await _fzf_lhs(commits)
