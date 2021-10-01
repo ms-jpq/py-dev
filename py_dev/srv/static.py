@@ -65,7 +65,7 @@ def _seek(
 ) -> Union[_Fd, Tuple[_Fd, ...], None]:
     uri = urlsplit(handler.path)
     raw = unquote(uri.path)
-    path = PurePosixPath(normcase(raw)).relative_to(PurePosixPath(altsep or sep))
+    path = PurePosixPath(normcase(raw)).relative_to(altsep or sep)
 
     try:
         asset = (root / path).resolve(strict=True)
