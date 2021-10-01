@@ -63,6 +63,7 @@ async def main() -> int:
         new_uri = uri
 
     print(new_uri)
+    await call("git", "fetch", capture_stdout=False, capture_stderr=False)
     return 0
 
 
