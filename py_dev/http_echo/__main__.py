@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
-
 from argparse import ArgumentParser, Namespace
 from http.server import ThreadingHTTPServer
 from socket import getfqdn
 
+from ..log import log
 from ..run import run_main
 from .srv import EchoServer
 
@@ -22,7 +21,7 @@ async def main() -> int:
 
     httpd = ThreadingHTTPServer(bind, EchoServer)
     host = getfqdn() if args.open else "localhost"
-    print(f"SERVING -- http://{host}:{args.port}")
+    log.info("%s", f"SERVING -- http://{host}:{args.port}")
     httpd.serve_forever()
 
     return 0

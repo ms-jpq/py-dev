@@ -3,7 +3,9 @@ from typing import Tuple
 from urllib.parse import urlsplit
 
 from std2.asyncio.subprocess import call
+from std2.shutil import hr_print
 
+from ...log import log
 from ...run import run_main
 
 
@@ -62,7 +64,7 @@ async def main() -> int:
     else:
         new_uri = uri
 
-    print(new_uri)
+    log.info("%s", hr_print(new_uri))
     await call("git", "fetch", capture_stdout=False, capture_stderr=False)
     return 0
 

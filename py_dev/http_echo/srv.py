@@ -1,21 +1,26 @@
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from locale import strxfrm
-from shutil import get_terminal_size
-from typing import Any, Mapping
+from os import linesep
+from typing import Any, Iterator, Mapping
+
+from std2.shutil import hr_print
+
+from ..log import log
 
 
 def _log(method: str, path: str, headers: Mapping[str, Any], content: bytes) -> None:
-    cols, _ = get_terminal_size()
-    print("*" * cols)
-    print(f"{method.ljust(10)} {path}")
-    print("::Headers::")
-    for key, val in headers.items():
-        print(f"{key}: {val}")
-    body = content.decode(errors="replace")
-    if body:
-        print("::Body::")
-        print(body)
+    def cont() -> Iterator[str]:
+        yield f"{method.ljust(10)} {path}"
+        for key, val in headers.items():
+            yield "::Headers::"
+            yield f"{key}: {val}"
+        if body := content.decode("UTF-8", errors="replace"):
+            yield "::Body::"
+            yield body
+
+    lines = linesep.join(cont())
+    log.info("%s", hr_print(lines))
 
 
 def _echo_req(handler: BaseHTTPRequestHandler) -> None:
@@ -56,4 +61,3 @@ class EchoServer(BaseHTTPRequestHandler):
 
     def do_PUT(self) -> None:
         _echo_req(self)
-
