@@ -38,7 +38,11 @@ class _Fd:
 
 def _fd(root: PurePath, path: Path, stat: stat_result) -> _Fd:
     is_dir = S_ISDIR(stat.st_mode)
-    sortby = (not is_dir, strxfrm(path.suffix), strxfrm(path.stem))
+    sortby = (
+        not is_dir,
+        "" if is_dir else strxfrm(path.suffix),
+        strxfrm(path.stem),
+    )
     rel_path = PurePath(normcase(path.relative_to(root)))
     name = path.name + sep if is_dir else path.name
 
@@ -87,8 +91,8 @@ def _seek(
                         for scan in scandir(asset):
                             with suppress(OSError):
                                 stat = scan.stat()
-                                fd = _fd(root, path=Path(scan), stat=stat)
-                                yield fd
+                            fd = _fd(root, path=Path(scan), stat=stat)
+                            yield fd
 
                 return (fd, *sorted(cont(), key=lambda f: f.sortby))
 
