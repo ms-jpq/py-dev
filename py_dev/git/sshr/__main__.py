@@ -65,7 +65,6 @@ async def main() -> int:
         new_uri = uri
 
     log.info("%s", hr_print(new_uri))
-    await call("git", "fetch", capture_stdout=False, capture_stderr=False)
     return 0
 
 
