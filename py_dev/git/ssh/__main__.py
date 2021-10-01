@@ -53,12 +53,12 @@ async def main() -> int:
     parsed = urlsplit(uri)
 
     if parsed.scheme in {"http", "https"}:
-        if parsed.netloc != "github.com":
-            raise ValueError(parsed)
-        else:
+        if parsed.netloc == "github.com":
             path = PurePosixPath(parsed.path).with_suffix("").relative_to("/")
             new_uri = f"git@{parsed.netloc}:{path}.git"
             await _set_uri(remote, uri=new_uri)
+        else:
+            raise ValueError(f"Cannot parse {uri}")
 
     return 0
 
