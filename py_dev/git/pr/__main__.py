@@ -10,7 +10,6 @@ from ...run import run_main
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("uri")
-
     return parser.parse_args()
 
 
@@ -29,7 +28,6 @@ async def main() -> int:
         capture_stdout=False,
         capture_stderr=False,
     )
-
     await call(
         "git",
         "checkout",
