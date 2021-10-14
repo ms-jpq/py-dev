@@ -161,5 +161,5 @@ def get(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
         handler.wfile.write(index)
     else:
         _send_headers(handler, fd=fd)
-        with fd.path.open("rb") as pp:
+        with fd.path.open("rb") as pp, suppress(BrokenPipeError):
             copyfileobj(pp, handler.wfile)
