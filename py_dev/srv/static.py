@@ -150,7 +150,9 @@ def head(
     fds = _seek(handler, prefix=prefix, root=root)
 
     if fds is None:
-        handler.send_error(HTTPStatus.NOT_FOUND)
+        code = HTTPStatus.NOT_FOUND
+        msg, _ = handler.responses.get(code, (None, None))
+        handler.send_response_only(code, msg)
     elif isinstance(fds, Sequence):
         index = _index(j2, fd=fds)
         _send_index_headers(handler, index=index)
@@ -167,7 +169,9 @@ def get(
     fd = _seek(handler, prefix=prefix, root=root)
 
     if fd is None:
-        handler.send_error(HTTPStatus.NOT_FOUND)
+        code = HTTPStatus.NOT_FOUND
+        msg, _ = handler.responses.get(code, (None, None))
+        handler.send_response_only(code, msg)
     elif isinstance(fd, Sequence):
         index = _index(j2, fd=fd)
         _send_index_headers(handler, index=index)
