@@ -65,36 +65,39 @@ def _fd(root: PurePath, path: Path, stat: stat_result) -> _Fd:
 
 
 def _seek(
-    handler: BaseHTTPRequestHandler, root: Path
+    handler: BaseHTTPRequestHandler, prefix: PurePosixPath, root: Path
 ) -> Union[_Fd, Tuple[_Fd, ...], None]:
     uri = urlsplit(handler.path)
     raw = normcase(unquote(uri.path))
-    path = PurePosixPath(raw).relative_to(altsep or sep)
-
     try:
-        asset = (root / path).resolve(strict=True)
-        stat = asset.stat()
-    except OSError:
+        path = PurePosixPath(raw).relative_to(prefix)
+    except ValueError:
         return None
     else:
-        if not is_relative_to(asset, root):
+        try:
+            asset = (root / path).resolve(strict=True)
+            stat = asset.stat()
+        except OSError:
             return None
         else:
-            fd = _fd(root, path=asset, stat=stat)
-
-            if not S_ISDIR(stat.st_mode):
-                return fd
+            if not is_relative_to(asset, root):
+                return None
             else:
+                fd = _fd(root, path=asset, stat=stat)
 
-                def cont() -> Iterator[_Fd]:
-                    with suppress(OSError):
-                        for scan in scandir(asset):
-                            with suppress(OSError):
-                                stat = scan.stat()
-                                fd = _fd(root, path=Path(scan), stat=stat)
-                                yield fd
+                if not S_ISDIR(stat.st_mode):
+                    return fd
+                else:
 
-                return (fd, *sorted(cont(), key=lambda f: f.sortby))
+                    def cont() -> Iterator[_Fd]:
+                        with suppress(OSError):
+                            for scan in scandir(asset):
+                                with suppress(OSError):
+                                    stat = scan.stat()
+                                    fd = _fd(root, path=Path(scan), stat=stat)
+                                    yield fd
+
+                    return (fd, *sorted(cont(), key=lambda f: f.sortby))
 
 
 def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
@@ -138,8 +141,13 @@ def build_j2() -> Environment:
     return j2
 
 
-def head(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
-    fds = _seek(handler, root=root)
+def head(
+    j2: Environment,
+    handler: BaseHTTPRequestHandler,
+    root: Path,
+    prefix: PurePosixPath = PurePosixPath(altsep or sep),
+) -> None:
+    fds = _seek(handler, prefix=prefix, root=root)
 
     if fds is None:
         handler.send_error(HTTPStatus.NOT_FOUND)
@@ -150,8 +158,13 @@ def head(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
         _send_headers(handler, fd=fds)
 
 
-def get(j2: Environment, handler: BaseHTTPRequestHandler, root: Path) -> None:
-    fd = _seek(handler, root=root)
+def get(
+    j2: Environment,
+    handler: BaseHTTPRequestHandler,
+    root: Path,
+    prefix: PurePosixPath = PurePosixPath(altsep or sep),
+) -> None:
+    fd = _seek(handler, prefix=prefix, root=root)
 
     if fd is None:
         handler.send_error(HTTPStatus.NOT_FOUND)
