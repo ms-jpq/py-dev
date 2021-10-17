@@ -1,5 +1,5 @@
 from typing import Tuple
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 from webbrowser import open as open_w
 
 from std2.asyncio.subprocess import call
@@ -37,7 +37,8 @@ def _p_uri(uri: str, branch: str) -> str:
         return uri
     elif uri.startswith(github_prefix):
         location = removesuffix(removeprefix(uri, github_prefix), ".git")
-        return f"https://github.com/{location}/tree/{branch}"
+        q_location, q_branch = quote(location), quote(branch)
+        return f"https://github.com/{q_location}/tree/{q_branch}"
     else:
         raise ValueError(f"Cannot parse {uri} into https://...")
 

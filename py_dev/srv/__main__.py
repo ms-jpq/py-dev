@@ -4,6 +4,7 @@ from os import curdir
 from os.path import normcase
 from pathlib import Path, PurePath
 from socket import getfqdn
+from webbrowser import open as w_open
 
 from std2.shutil import hr_print
 
@@ -43,7 +44,10 @@ async def main() -> int:
         log.fatal("%s", hr_print(e))
         return 1
     else:
-        log.info("%s", hr_print(f"SERVING -- http://{host}:{args.port}"))
+        encoded = host.encode("idna").decode()
+        location = f"http://{encoded}:{args.port}"
+        log.info("%s", hr_print(f"SERVING -- {location}"))
+        w_open(location)
         httpd.serve_forever()
         return 0
 
