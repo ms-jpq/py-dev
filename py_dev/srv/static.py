@@ -176,5 +176,5 @@ def get(
         handler.wfile.write(index)
     else:
         _send_headers(handler, fd=fd)
-        with fd.path.open("rb") as pp, suppress(BrokenPipeError):
+        with fd.path.open("rb") as pp, suppress(ConnectionError):
             copyfileobj(pp, handler.wfile)
