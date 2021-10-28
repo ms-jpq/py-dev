@@ -1,9 +1,10 @@
 from argparse import ArgumentParser, Namespace
 from configparser import ConfigParser, ParsingError
 from itertools import chain
-from os import linesep
+from os import environ, linesep
 from pathlib import Path
-from string import ascii_letters, digits
+from shlex import split
+from string import Template, ascii_letters, digits
 from sys import stderr, stdin, stdout
 from uuid import uuid4
 
@@ -28,7 +29,7 @@ async def main() -> int:
     args = _arg_parse()
     text = stdin.read() if args.stdin else Path(args.path).read_text()
     lines = "".join(chain((f"[{uuid4()}]", linesep), text))
-    parser = _Parser(allow_no_value=True)
+    parser = _Parser(allow_no_value=True, strict=False, interpolation=None)
 
     try:
         parser.read_string(lines)
@@ -37,14 +38,19 @@ async def main() -> int:
         return 1
     else:
         legal = {*ascii_letters, digits, "_"}
+        seen = {**environ}
         for section in parser.values():
             for key, val in section.items():
-                if {*key} < legal:
-                    line = f"{key}={val}"
-                    stderr.write(line)
-                    stderr.write(linesep)
-                    stdout.write(f"export {line}")
-                    stdout.write(linesep)
+                if {*key} <= legal:
+                    if parts := split(val):
+                        part, *_ = parts
+                        tpl = Template(part)
+                        seen[key] = rhs = tpl.safe_substitute(seen)
+                        line = f"{key}={rhs}"
+                        stderr.write(line)
+                        stderr.write(linesep)
+                        stdout.write(f"export {line}")
+                        stdout.write(linesep)
 
         return 0
 
