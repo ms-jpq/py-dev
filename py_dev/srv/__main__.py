@@ -1,9 +1,10 @@
 from argparse import ArgumentParser, Namespace
-from http.server import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from ipaddress import ip_address
 from os import curdir
 from os.path import normcase
 from pathlib import Path, PurePath
+from typing import Optional, Tuple
 from webbrowser import open as w_open
 
 from std2.http.server import create_server
@@ -22,39 +23,43 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-async def main() -> int:
-
-    args = _parse_args()
-
-    bind = ("" if args.open else ip_address("::1"), args.open)
-
+def serve(root: PurePath, port: int) -> Optional[Tuple[HTTPServer, int]]:
+    bind = ("" if port else ip_address("::1"), port)
     j2 = build_j2()
+
     try:
-        root = Path(normcase(args.root)).resolve(strict=True)
+        resolved = Path(root).resolve(strict=True)
 
         class Handler(BaseHTTPRequestHandler):
             def do_HEAD(self) -> None:
-                head(j2, handler=self, root=root)
+                head(j2, handler=self, root=resolved)
 
             def do_GET(self) -> None:
-                get(j2, handler=self, root=root)
+                get(j2, handler=self, root=resolved)
 
         httpd = create_server(bind, Handler)
     except OSError as e:
         log.fatal("%s", hr_print(e))
-        return 1
+        return None
     else:
-        with httpd:
-            host = (
-                httpd.server_name.encode("idna").decode() if args.open else "localhost"
-            )
-            _, port, *_ = httpd.socket.getsockname()
-            location = f"http://{host}:{port}"
-            w_open(location)
+        _, actual_port, *_ = httpd.socket.getsockname()
+        return httpd, actual_port
 
-            log.info("%s", hr_print(f"SERVING -- {location}"))
-            httpd.serve_forever()
+
+async def main() -> int:
+    args = _parse_args()
+
+    if srv := serve(args.root, port=args.open):
+        httpd, port = srv
+        host = httpd.server_name if args.open else "localhost"
+        location = f"http://{host}:{port}"
+        w_open(location)
+
+        log.info("%s", hr_print(f"SERVING -- {location}"))
+        httpd.serve_forever()
         return 0
+    else:
+        return 1
 
 
 run_main(main())
