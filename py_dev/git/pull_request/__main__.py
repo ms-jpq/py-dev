@@ -15,8 +15,8 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
-    uri = urlsplit(args.uri)
-    path = PurePosixPath(unquote(uri.path))
+    path = PurePosixPath(unquote(urlsplit(args.uri).path))
+
     pr_id = int(path.name)
     br_name = f"pr-{pr_id}"
 
