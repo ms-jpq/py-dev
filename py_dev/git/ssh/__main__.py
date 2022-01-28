@@ -1,38 +1,21 @@
+from argparse import ArgumentParser, Namespace
 from asyncio import gather
+from pathlib import PurePath
+from typing import Sequence, Tuple
 
 from std2.asyncio.subprocess import call
 
 from ...run import run_main
 
 
-async def _switch(path: str) -> None:
-    proc = await call(
-        "git",
-        "rev-parse",
-        "--abbrev-ref",
-        "origin/HEAD",
-        cwd=path,
-        capture_stderr=False,
-    )
+def _parse_args() -> Tuple[Namespace, Sequence[str]]:
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument("cmd", type=PurePath)
+    return parser.parse_known_args()
 
-    origin_main = proc.out.decode().strip()
-    _, _, main = origin_main.partition("/")
-    await call(
-        "git",
-        "checkout",
-        origin_main,
-        cwd=path,
-        capture_stdout=False,
-        capture_stderr=False,
-    )
-    await call(
-        "git",
-        "switch",
-        main,
-        cwd=path,
-        capture_stdout=False,
-        capture_stderr=False,
-    )
+
+async def _switch(path: str) -> None:
+    pass
 
 
 async def main() -> int:
@@ -50,4 +33,3 @@ async def main() -> int:
 
 
 run_main(main())
-
