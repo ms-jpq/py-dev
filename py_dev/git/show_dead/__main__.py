@@ -1,13 +1,18 @@
 from argparse import ArgumentParser, Namespace
 from os import linesep
+from os.path import normcase
 from pathlib import Path
+from shlex import join
+from tempfile import mkdtemp
 from typing import AsyncIterator, Iterable, Iterator, Tuple
 
 from std2.asyncio.subprocess import call
+from std2.shutil import hr_print
 
+from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import git_show_many, pprn
+from ..ops import pprn
 from ..spec_parse import spec_parse
 
 
@@ -46,6 +51,23 @@ async def _fzf_rhs(sha: str, path: str) -> None:
     await pprn(proc.out, path=path)
 
 
+async def _git_show_many(it: Iterable[Tuple[str, str]]) -> None:
+    tmp = Path(mkdtemp())
+    for sha, path in it:
+        temp = tmp / path
+        proc = await call(
+            "git",
+            "show",
+            f"{sha}:{path}",
+            capture_stderr=False,
+        )
+        temp.parent.mkdir(parents=True, exist_ok=True)
+        temp.write_bytes(proc.out)
+
+    line = "\t" + join(("cd", normcase(tmp)))
+    log.info("%s", hr_print(line))
+
+
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group()
@@ -68,7 +90,7 @@ async def main() -> int:
                 sha, _, path = line.split(linesep)
                 yield sha, path
 
-        await git_show_many(cont())
+        await _git_show_many(cont())
     else:
         paths = [path async for path in _git_dead_files()]
         await _fzf_lhs(paths)
