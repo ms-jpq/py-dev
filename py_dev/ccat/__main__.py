@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
+from pathlib import Path, PurePath
 from sys import stdin, stdout
 
 from pygments.formatters._mapping import FORMATTERS
@@ -12,7 +12,7 @@ from .pprn import pprn
 
 def _arg_parse() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("name", nargs="?")
+    parser.add_argument("name", nargs="?", type=PurePath)
     parser.add_argument("-", "--stdin", action="store_true")
 
     themes = sorted(get_all_styles())

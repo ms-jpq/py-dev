@@ -41,6 +41,7 @@ async def _git_show_commit(sha: str) -> None:
         "--submodule",
         "--stat",
         "--color",
+        "--",
         sha,
         capture_stdout=False,
         capture_stderr=False,
@@ -50,6 +51,7 @@ async def _git_show_commit(sha: str) -> None:
         "show",
         "--submodule",
         "--pretty=format:",
+        "--",
         sha,
         capture_stderr=False,
     )

@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from std2.asyncio.subprocess import call
 
@@ -22,7 +22,7 @@ async def _git_file_diff(sha1: str, sha2: str) -> bytes:
     return proc.out.strip(b"\0")
 
 
-async def _git_diff_single(unified: int, sha1: str, sha2: str, path: str) -> bytes:
+async def _git_diff_single(unified: int, sha1: str, sha2: str, path: PurePath) -> bytes:
     proc = await call(
         "git",
         "diff",
@@ -44,7 +44,7 @@ async def _fzf_lhs(unified: int, sha1: str, sha2: str, files: bytes) -> None:
     )
 
 
-async def _fzf_rhs(unified: int, sha1: str, sha2: str, path: str) -> None:
+async def _fzf_rhs(unified: int, sha1: str, sha2: str, path: PurePath) -> None:
     diff = await _git_diff_single(unified, sha1=sha1, sha2=sha2, path=path)
     await pretty_diff(diff, path=path)
 
@@ -67,10 +67,10 @@ async def main() -> int:
     args = _parse_args()
 
     if args.preview:
-        path = Path(args.preview).read_text().rstrip("\0")
+        path = PurePath(Path(args.preview).read_text().rstrip("\0"))
         await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
     elif args.execute:
-        path = Path(args.execute).read_text().rstrip("\0")
+        path = PurePath(Path(args.execute).read_text().rstrip("\0"))
         await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
     else:
         commits = await _git_file_diff(sha1=args.sha1, sha2=args.sha2)

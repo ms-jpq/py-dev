@@ -1,6 +1,7 @@
 from itertools import takewhile
 from os import environ
-from pathlib import Path
+from os.path import normcase
+from pathlib import Path, PurePath
 from shlex import split
 from shutil import which
 from sys import stdout
@@ -12,7 +13,7 @@ from std2.asyncio.subprocess import call
 from ..ccat.pprn import pprn_basic
 
 
-async def pprn(content: bytes, path: Optional[str]) -> None:
+async def pprn(content: bytes, path: Optional[PurePath]) -> None:
     cmd = "bat"
     if path and which(cmd):
         suffix = "".join(Path(path).suffixes)
@@ -28,11 +29,11 @@ async def pprn(content: bytes, path: Optional[str]) -> None:
                 capture_stderr=False,
             )
     else:
-        pretty = pprn_basic(path, text=content.decode())
+        pretty = pprn_basic(normcase(path) if path else None, text=content.decode())
         stdout.write(pretty)
 
 
-async def pretty_diff(diff: bytes, path: Optional[str]) -> None:
+async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
     pager = environ.get("GIT_PAGER")
     if pager:
         parts = split(pager)

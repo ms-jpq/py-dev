@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from os import linesep
 from os.path import normcase
-from pathlib import Path
+from pathlib import Path, PurePath
 from shlex import join
 from tempfile import mkdtemp
 from typing import AsyncIterator, Iterable, Iterator, Tuple
@@ -16,7 +16,7 @@ from ..ops import pprn
 from ..spec_parse import spec_parse
 
 
-async def _git_dead_files() -> AsyncIterator[Tuple[str, str, str]]:
+async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
     proc = await call(
         "git",
         "log",
@@ -32,16 +32,18 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, str]]:
         sha, _, date = meta.partition(" ")
         for path in paths:
             if path:
-                yield f"{sha}~", date, path
+                yield f"{sha}~", date, PurePath(path)
 
 
-async def _fzf_lhs(paths: Iterable[Tuple[str, str, str]]) -> None:
-    lines = (f"{sha}{linesep}{date}{linesep}{path}" for sha, date, path in paths)
+async def _fzf_lhs(paths: Iterable[Tuple[str, str, PurePath]]) -> None:
+    lines = (
+        f"{sha}{linesep}{date}{linesep}{normcase(path)}" for sha, date, path in paths
+    )
     stdin = "\0".join(lines).encode()
     await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
 
 
-async def _fzf_rhs(sha: str, path: str) -> None:
+async def _fzf_rhs(sha: str, path: PurePath) -> None:
     proc = await call(
         "git",
         "show",
@@ -51,7 +53,7 @@ async def _fzf_rhs(sha: str, path: str) -> None:
     await pprn(proc.out, path=path)
 
 
-async def _git_show_many(it: Iterable[Tuple[str, str]]) -> None:
+async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
     tmp = Path(mkdtemp())
     for sha, path in it:
         temp = tmp / path
@@ -81,14 +83,14 @@ async def main() -> int:
     if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
         sha, _, path = preview.split(linesep)
-        await _fzf_rhs(sha, path=path)
+        await _fzf_rhs(sha, path=PurePath(path))
     elif args.execute:
         lines = Path(args.execute).read_text().rstrip("\0").split("\0")
 
-        def cont() -> Iterator[Tuple[str, str]]:
+        def cont() -> Iterator[Tuple[str, PurePath]]:
             for line in lines:
                 sha, _, path = line.split(linesep)
-                yield sha, path
+                yield sha, PurePath(path)
 
         await _git_show_many(cont())
     else:

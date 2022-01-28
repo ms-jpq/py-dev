@@ -1,3 +1,6 @@
+from contextlib import suppress
+from os.path import normcase
+from pathlib import PurePath
 from typing import Optional, cast
 
 from pygments import highlight
@@ -11,17 +14,18 @@ from pygments.util import ClassNotFound
 from .consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 
 
-def _get_lexer(file_name: Optional[str], text: str) -> Lexer:
-    try:
-        return get_lexer_for_filename(file_name)
-    except (ClassNotFound, TypeError):
-        try:
-            return guess_lexer(text)
-        except ClassNotFound:
-            return TextLexer()
+def _get_lexer(filename: Optional[PurePath], text: str) -> Lexer:
+    if filename:
+        with suppress(ClassNotFound):
+            return get_lexer_for_filename(normcase(filename.name))
+
+    with suppress(ClassNotFound):
+        return guess_lexer(text)
+
+    return TextLexer()
 
 
-def pprn(format: str, theme: str, filename: Optional[str], text: str) -> str:
+def pprn(format: str, theme: str, filename: Optional[PurePath], text: str) -> str:
     style = get_style_by_name(theme)
     formatter = get_formatter_by_name(format, style=style)
 
@@ -30,7 +34,7 @@ def pprn(format: str, theme: str, filename: Optional[str], text: str) -> str:
     return cast(str, pretty)
 
 
-def pprn_basic(filename: Optional[str], text: str) -> str:
+def pprn_basic(filename: Optional[PurePath], text: str) -> str:
     return pprn(
         format=DEFAULT_FORMATTER, theme=DEFAULT_STYLE, filename=filename, text=text
     )
