@@ -24,6 +24,7 @@ async def _git_uri() -> Tuple[str, str]:
         "git",
         "remote",
         "get-url",
+        "--",
         remote,
         capture_stderr=False,
     )
@@ -33,6 +34,7 @@ async def _git_uri() -> Tuple[str, str]:
 
 def _p_uri(uri: str, branch: str) -> str:
     github_prefix = "git@github.com:"
+
     if urlsplit(uri).scheme in {"http", "https"}:
         return uri
     elif uri.startswith(github_prefix):

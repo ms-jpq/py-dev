@@ -29,9 +29,7 @@
           {% for NAME, TYPE, SIZE, MTIME in PATHS %}
           <tr>
             <td>
-              <a rel="noreferrer" href="{{ NAME | urlencode }}"
-                >{{ NAME | e }}</a
-              >
+              <a rel="noreferrer" href="{{ NAME | e }}">{{ NAME | e }}</a>
             </td>
             <td>{{ (TYPE or "") | e }}</td>
             <td>{{ SIZE | e }}</td>
