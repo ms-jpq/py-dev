@@ -1,35 +1,36 @@
 from argparse import ArgumentParser, Namespace
-from asyncio import gather
-from pathlib import PurePath
+from os import environ, execle
+from os.path import normcase
+from pathlib import Path, PurePath
+from shlex import join
+from shutil import which
 from typing import Sequence, Tuple
-
-from std2.asyncio.subprocess import call
-
-from ...run import run_main
 
 
 def _parse_args() -> Tuple[Namespace, Sequence[str]]:
     parser = ArgumentParser(add_help=False)
+    parser.add_argument("path", type=PurePath)
     parser.add_argument("cmd", type=PurePath)
     return parser.parse_known_args()
 
 
-async def _switch(path: str) -> None:
-    pass
+def main() -> int:
+    args, argv = _parse_args()
+    path = PurePath(args.path)
+
+    if path == PurePath("-"):
+        addn = {}
+    else:
+        key_path = path if path.is_absolute() else Path.home() / ".ssh" / path
+        ssh_cmd = join(("ssh", "-o", "IdentitiesOnly=yes", "-i", normcase(key_path)))
+        addn = {"GIT_SSH_COMMAND": ssh_cmd}
+
+    env = {**environ, **addn}
+
+    if cmd := which(args.cmd):
+        execle(cmd, normcase(cmd), *argv, env)
+    else:
+        raise OSError(args.cmd)
 
 
-async def main() -> int:
-    proc = await call(
-        "git",
-        "submodule",
-        "foreach",
-        "--recursive",
-        "--quiet",
-        "pwd",
-        capture_stderr=False,
-    )
-    await gather(*map(_switch, proc.out.decode().splitlines()))
-    return 0
-
-
-run_main(main())
+main()
