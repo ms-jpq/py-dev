@@ -85,7 +85,13 @@ async def main() -> int:
         await _fzf_rhs(args.unified, sha=sha, path=args.path)
     elif args.execute:
         sha, _, _ = Path(args.execute).read_text().rstrip("\0").partition(" ")
-        await call("git", "show", f"{sha}~:{args.path}")
+        await call(
+            "git",
+            "show",
+            f"{sha}:{args.path}",
+            capture_stdout=False,
+            capture_stderr=False,
+        )
     else:
         commits = await _git_file_log(args.path)
         await _fzf_lhs(args.unified, path=args.path, commits=commits)

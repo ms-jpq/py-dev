@@ -8,6 +8,7 @@ from typing import AsyncIterator, Iterable, Tuple
 from std2.asyncio.subprocess import call
 from std2.shutil import hr_print
 
+from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_diff
@@ -75,8 +76,6 @@ async def main() -> int:
         execute = Path(args.execute).read_text().rstrip("\0")
         for line in execute.split("\0"):
             sha, _, _ = line.partition(" ")
-            from ...log import log
-
             log.info("%s", hr_print(sha))
     else:
         commits = [el async for el in _git_ls_commits()]
