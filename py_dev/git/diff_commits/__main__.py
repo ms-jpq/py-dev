@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path, PurePath
+from typing import Iterator
 
 from std2.asyncio.subprocess import call
 from std2.itertools import chunk
@@ -20,11 +21,19 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
         newer,
         capture_stderr=False,
     )
-    lines = b"\0".join(
-        status + b" " + path
-        for status, path in chunk(proc.out.rstrip(b"\0").split(b"\0"), 2)
-    )
-    return lines
+
+    def cont() -> Iterator[bytes]:
+        it = iter(proc.out.rstrip(b"\0").split(b"\0"))
+        while True:
+            if status := next(it, None):
+                if status[:1] == b"R":
+                    yield b" ".join((status, next(it), next(it)))
+                else:
+                    yield b" ".join((status, next(it)))
+            else:
+                break
+
+    return b"\0".join(cont())
 
 
 async def _git_diff_single(
@@ -78,11 +87,11 @@ async def main() -> int:
     older, newer = args.older, args.newer
 
     if preview := args.preview:
-        _, _, path = Path(preview).read_text().rstrip("\0").partition(" ")
+        _, _, path = Path(preview).read_text().rstrip("\0").rpartition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     elif execute := args.execute:
-        _, _, path = Path(execute).read_text().rstrip("\0").partition(" ")
+        _, _, path = Path(execute).read_text().rstrip("\0").rpartition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     else:
