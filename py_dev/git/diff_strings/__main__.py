@@ -14,8 +14,6 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
     proc = await call(
         "git",
         "log",
-        "--find-renames",
-        "--find-copies",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         *(() if regex else ("--fixed-strings",)),

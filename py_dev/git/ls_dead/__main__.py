@@ -20,8 +20,6 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
     proc = await call(
         "git",
         "log",
-        "--find-renames",
-        "--find-copies",
         "--diff-filter=D",
         "--name-only",
         "--color",
