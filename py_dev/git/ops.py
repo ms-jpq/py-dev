@@ -13,15 +13,14 @@ from ..ccat.pprn import pprn_basic
 
 
 async def pprn(content: bytes, path: Optional[PurePath]) -> None:
-    cmd = "bat"
-    if path and which(cmd):
+    if path and (bat := which("bat")):
         suffix = "".join(Path(path).suffixes)
         with NamedTemporaryFile(suffix=suffix) as fd:
             fd.write(content)
             fd.flush()
             await call(
                 "--color=always",
-                cmd,
+                bat,
                 "--",
                 fd.name,
                 capture_stdout=False,
@@ -33,17 +32,12 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
 
 
 async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
-    if pager := split(environ.get("GIT_PAGER", "")):
-        prog, *args = reversed(tuple(takewhile(lambda p: p != "|", reversed(pager))))
-        if cmd := which(prog):
-            await call(
-                cmd,
-                *args,
-                stdin=diff,
-                capture_stdout=False,
-                capture_stderr=False,
-            )
-        else:
-            await pprn(diff, path=path)
+    if delta := which("delta"):
+        await call(
+            delta,
+            stdin=diff,
+            capture_stdout=False,
+            capture_stderr=False,
+        )
     else:
         await pprn(diff, path=path)
