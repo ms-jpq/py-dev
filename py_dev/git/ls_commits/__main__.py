@@ -62,13 +62,14 @@ async def _git_show_commit(sha: str) -> None:
         capture_stderr=False,
     )
 
-    hr = lambda n: stdout.buffer.write(linesep.encode() * n)
+
     p1, p2, p3 = await gather(c1, c2, c3)
     stdout.buffer.write(p1.out)
-    hr(2)
+    stdout.buffer.write(linesep.encode() * 2)
     stdout.buffer.write(p2.out)
-    hr(1)
+    stdout.buffer.write(linesep.encode() * 1)
     stdout.flush()
+
     await pretty_diff(p3.out, path=None)
 
 
