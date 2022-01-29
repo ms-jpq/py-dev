@@ -17,6 +17,8 @@ async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
     proc = await call(
         "git",
         "log",
+        "--find-renames",
+        "--find-copies",
         "--relative-date",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",

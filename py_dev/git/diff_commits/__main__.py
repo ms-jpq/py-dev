@@ -14,6 +14,8 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
     proc = await call(
         "git",
         "diff",
+        "--find-renames",
+        "--find-copies",
         "--name-status",
         "-z",
         older,
@@ -40,6 +42,8 @@ async def _git_diff_single(
     proc = await call(
         "git",
         "diff",
+        "--find-renames",
+        "--find-copies",
         "--color-moved=dimmed-zebra",
         "--color-moved-ws=ignore-space-change",
         "--ignore-space-change",

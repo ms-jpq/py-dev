@@ -67,6 +67,8 @@ async def pretty_commit(unified: int, sha: str) -> None:
     c1 = call(
         "git",
         "log",
+        "--find-renames",
+        "--find-copies",
         "--max-count=1",
         "--relative-date",
         "--color",

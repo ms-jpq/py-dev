@@ -14,6 +14,8 @@ async def _git_file_log(path: PurePath) -> bytes:
     proc = await call(
         "git",
         "log",
+        "--find-renames",
+        "--find-copies",
         "--relative-date",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
@@ -28,6 +30,8 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
     proc = await call(
         "git",
         "diff",
+        "--find-renames",
+        "--find-copies",
         "--color-moved=dimmed-zebra",
         "--color-moved-ws=ignore-space-change",
         "--ignore-space-change",
