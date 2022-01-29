@@ -76,7 +76,7 @@ async def main() -> int:
         await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
 
     else:
-        commits = await _git_file_diff(dst=args.dst, src=args.post)
+        commits = await _git_file_diff(dst=dst, src=src)
         await _fzf_lhs(args.unified, dst=dst, src=src, files=commits)
 
     return 0
