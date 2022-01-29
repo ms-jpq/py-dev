@@ -1,7 +1,4 @@
-from itertools import takewhile
-from os import environ
-from pathlib import Path, PurePath
-from shlex import split
+from pathlib import PurePath
 from shutil import which
 from sys import stdout
 from tempfile import NamedTemporaryFile
@@ -14,13 +11,13 @@ from ..ccat.pprn import pprn_basic
 
 async def pprn(content: bytes, path: Optional[PurePath]) -> None:
     if path and (bat := which("bat")):
-        suffix = "".join(Path(path).suffixes)
+        suffix = "".join(path.suffixes)
         with NamedTemporaryFile(suffix=suffix) as fd:
             fd.write(content)
             fd.flush()
             await call(
-                "--color=always",
                 bat,
+                "--color=always",
                 "--",
                 fd.name,
                 capture_stdout=False,
