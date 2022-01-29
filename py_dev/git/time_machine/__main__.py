@@ -28,7 +28,9 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
     proc = await call(
         "git",
         "diff",
+        "--color-moved=dimmed-zebra",
         "--color-moved-ws=ignore-space-change",
+        "--ignore-space-change",
         f"--unified={unified}",
         f"{sha}~",
         sha,

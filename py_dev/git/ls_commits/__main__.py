@@ -29,12 +29,16 @@ async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
         yield sha, date
 
 
-async def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
+async def _fzf_lhs(unified: int, commits: Iterable[Tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
-    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(
+        stdin,
+        p_args=(f"--unified={unified}", "--preview={f}"),
+        e_args=(f"--unified={unified}", "--execute={+f}"),
+    )
 
 
-async def _git_show_commit(sha: str) -> None:
+async def _git_show_commit(unified: int, sha: str) -> None:
     c1 = call(
         "git",
         "show",
@@ -58,7 +62,10 @@ async def _git_show_commit(sha: str) -> None:
         "git",
         "show",
         "--submodule",
+        "--color-moved=dimmed-zebra",
+        "--color-moved-ws=ignore-space-change",
         "--ignore-space-change",
+        f"--unified={unified}",
         "--pretty=format:",
         sha,
         capture_stderr=False,
@@ -86,6 +93,9 @@ def _parse_args() -> Namespace:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
     group.add_argument("--execute")
+
+    parser.add_argument("-u", "--unified", type=int, default=3)
+
     return spec_parse(parser)
 
 
@@ -94,7 +104,7 @@ async def main() -> int:
 
     if preview := args.preview:
         sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
-        await _git_show_commit(sha)
+        await _git_show_commit(args.unified, sha=sha)
 
     elif execute := args.execute:
 
@@ -107,7 +117,7 @@ async def main() -> int:
 
     else:
         commits = [el async for el in _git_ls_commits()]
-        await _fzf_lhs(commits)
+        await _fzf_lhs(args.unified, commits=commits)
 
     return 0
 
