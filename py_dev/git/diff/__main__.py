@@ -9,26 +9,26 @@ from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
-async def _git_file_diff(pre: str, post: str) -> bytes:
+async def _git_file_diff(dst: str, src: str) -> bytes:
     proc = await call(
         "git",
         "diff",
         "--name-only",
         "-z",
-        pre,
-        post,
+        dst,
+        src,
         capture_stderr=False,
     )
     return proc.out.strip(b"\0")
 
 
-async def _git_diff_single(unified: int, pre: str, post: str, path: PurePath) -> bytes:
+async def _git_diff_single(unified: int, dst: str, src: str, path: PurePath) -> bytes:
     proc = await call(
         "git",
         "diff",
         f"--unified={unified}",
-        pre,
-        post,
+        dst,
+        src,
         "--",
         path,
         capture_stderr=False,
@@ -36,23 +36,23 @@ async def _git_diff_single(unified: int, pre: str, post: str, path: PurePath) ->
     return proc.out
 
 
-async def _fzf_lhs(unified: int, pre: str, post: str, files: bytes) -> None:
+async def _fzf_lhs(unified: int, dst: str, src: str, files: bytes) -> None:
     await run_fzf(
         files,
-        p_args=(pre, post, f"--unified={unified}", "--preview={f}"),
-        e_args=(pre, post, f"--unified={unified}", "--execute={f}"),
+        p_args=(dst, src, f"--unified={unified}", "--preview={f}"),
+        e_args=(dst, src, f"--unified={unified}", "--execute={f}"),
     )
 
 
-async def _fzf_rhs(unified: int, pre: str, post: str, path: PurePath) -> None:
-    diff = await _git_diff_single(unified, pre=pre, post=post, path=path)
+async def _fzf_rhs(unified: int, dst: str, src: str, path: PurePath) -> None:
+    diff = await _git_diff_single(unified, dst=dst, src=src, path=path)
     await pretty_diff(diff, path=path)
 
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("pre")
-    parser.add_argument("post")
+    parser.add_argument("dst")
+    parser.add_argument("src", nargs="?", default="HEAD")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
@@ -68,13 +68,13 @@ async def main() -> int:
 
     if args.preview:
         path = PurePath(Path(args.preview).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, pre=args.pre, post=args.post, path=path)
+        await _fzf_rhs(args.unified, dst=args.src, src=args.dst, path=path)
     elif args.execute:
         path = PurePath(Path(args.execute).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, pre=args.pre, post=args.post, path=path)
+        await _fzf_rhs(args.unified, dst=args.src, src=args.dst, path=path)
     else:
-        commits = await _git_file_diff(pre=args.pre, post=args.post)
-        await _fzf_lhs(args.unified, pre=args.pre, post=args.post, files=commits)
+        commits = await _git_file_diff(dst=args.pre, src=args.post)
+        await _fzf_lhs(args.unified, dst=args.src, src=args.dst, files=commits)
 
     return 0
 
