@@ -4,7 +4,7 @@ from pathlib import Path, PurePath
 from typing import Optional, Tuple
 
 from std2.http.server import create_server
-from std2.shutil import hr_print
+from std2.shutil import hr
 
 from ..log import log
 from .static import build_j2, get, head
@@ -28,7 +28,7 @@ def serve(
 
         httpd = create_server(bind, Handler)
     except OSError as e:
-        log.fatal("%s", hr_print(e))
+        log.fatal("%s", hr(e))
         return None
     else:
         _, actual_port, *_ = httpd.socket.getsockname()

@@ -7,7 +7,7 @@ from tempfile import mkdtemp
 from typing import AsyncIterator, Iterable, Iterator, Tuple
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr_print
+from std2.shutil import hr
 
 from ...log import log
 from ...run import run_main
@@ -61,7 +61,7 @@ async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
         temp.write_bytes(proc.out)
 
     line = "\t" + join(("cd", normcase(tmp)))
-    log.info("%s", hr_print(line))
+    log.info("%s", hr(line))
 
 
 def _parse_args() -> Namespace:

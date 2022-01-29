@@ -4,7 +4,7 @@ from os.path import normcase
 from pathlib import PurePath
 from webbrowser import open as w_open
 
-from std2.shutil import hr_print
+from std2.shutil import hr
 
 from ..log import log
 from ..run import run_main
@@ -29,7 +29,7 @@ async def main() -> int:
         location = f"http://{host}:{port}"
         w_open(location)
 
-        log.info("%s", hr_print(f"SERVING -- {location}"))
+        log.info("%s", hr(f"SERVING -- {location}"))
         httpd.serve_forever()
         return 0
     else:

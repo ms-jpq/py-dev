@@ -3,7 +3,7 @@ from urllib.parse import quote, urlsplit
 from webbrowser import open as open_w
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr_print
+from std2.shutil import hr
 from std2.string import removeprefix, removesuffix
 
 from ...log import log
@@ -49,7 +49,7 @@ async def main() -> int:
     branch, uri = await _git_uri()
     clean_uri = _p_uri(uri, branch=branch)
     open_w(clean_uri)
-    log.info("%s", hr_print(clean_uri))
+    log.info("%s", hr(clean_uri))
     return 0
 
 

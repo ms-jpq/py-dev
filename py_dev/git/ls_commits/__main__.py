@@ -6,7 +6,7 @@ from sys import stdout
 from typing import AsyncIterator, Iterable, Tuple
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr, hr_print
+from std2.shutil import hr
 
 from ...log import log
 from ...run import run_main
@@ -102,7 +102,7 @@ async def main() -> int:
                 sha, _, _ = line.partition(" ")
                 yield sha
 
-        log.info("%s", hr_print(linesep.join(cont())))
+        log.info("%s", hr(linesep.join(cont())))
     else:
         commits = [el async for el in _git_ls_commits()]
         await _fzf_lhs(commits)
