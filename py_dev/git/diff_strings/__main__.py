@@ -10,14 +10,15 @@ from ..ops import pretty_commit
 from ..spec_parse import spec_parse
 
 
-async def _ls_commits(search: str, *searches: str) -> bytes:
+async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
     proc = await call(
         "git",
         "log",
         "--relative-date",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
-        *chain.from_iterable(zip(repeat("-S"), chain((search,), searches))),
+        "--perl-regexp" if regex else "--fixed-strings",
+        *chain.from_iterable(zip(repeat("-G"), chain((search,), searches))),
         capture_stderr=False,
     )
     return proc.out.strip(b"\0")
@@ -39,6 +40,7 @@ def _parse_args() -> Namespace:
     group.add_argument("--preview")
     group.add_argument("--execute")
 
+    parser.add_argument("-r", "--regex", action="store_true")
     parser.add_argument("-u", "--unified", type=int, default=3)
 
     return spec_parse(parser)
@@ -56,7 +58,7 @@ async def main() -> int:
         await pretty_commit(args.unified, sha=sha)
 
     else:
-        commits = await _ls_commits(*args.search)
+        commits = await _ls_commits(args.regex, *args.search)
         await _fzf_lhs(args.unified, *args.search, commits=commits)
 
     return 0
