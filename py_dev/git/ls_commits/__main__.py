@@ -88,9 +88,13 @@ async def main() -> int:
         await _git_show_commit(sha)
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
-        for line in execute.split("\0"):
-            sha, _, _ = line.partition(" ")
-            log.info("%s", hr_print(sha))
+
+        def cont() -> Iterable[str]:
+            for line in execute.split("\0"):
+                sha, _, _ = line.partition(" ")
+                yield sha
+
+        log.info("%s", hr_print(linesep.join(cont())))
     else:
         commits = [el async for el in _git_ls_commits()]
         await _fzf_lhs(commits)
