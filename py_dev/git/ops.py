@@ -81,8 +81,6 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "git",
         "show",
         "--submodule",
-        "--color-moved=dimmed-zebra",
-        "--color-moved-ws=ignore-space-change",
         "--ignore-space-change",
         f"--unified={unified}",
         "--pretty=format:",
