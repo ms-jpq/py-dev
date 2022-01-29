@@ -15,7 +15,7 @@ async def _git_file_log(path: PurePath) -> bytes:
         "git",
         "log",
         "--relative-date",
-        "--color=always",
+        "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         "--",
         path,

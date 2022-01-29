@@ -5,7 +5,7 @@ from shlex import split
 from shutil import which
 from sys import stdout
 from tempfile import NamedTemporaryFile
-from typing import Iterable, Optional
+from typing import Optional
 
 from std2.asyncio.subprocess import call
 from std2.shutil import hr
@@ -66,24 +66,15 @@ async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
 async def pretty_commit(unified: int, sha: str) -> None:
     c1 = call(
         "git",
-        "show",
-        "--submodule",
-        "--no-patch",
-        "--color",
+        "log",
+        "--max-count=1",
+        "--relative-date",
+        "--name-status",
         sha,
+        capture_stdout=False,
         capture_stderr=False,
     )
     c2 = call(
-        "git",
-        "diff-tree",
-        "--no-commit-id",
-        "--find-renames",
-        "--name-status",
-        "-r",
-        sha,
-        capture_stderr=False,
-    )
-    c3 = call(
         "git",
         "show",
         "--submodule",
@@ -96,18 +87,8 @@ async def pretty_commit(unified: int, sha: str) -> None:
         capture_stderr=False,
     )
 
-    p1, p2, p3 = await gather(c1, c2, c3)
+    _, proc = await gather(c1, c2)
 
-    def cont() -> Iterable[str]:
-        yield p1.out.decode()
-        yield linesep
-        yield hr()
-        yield linesep
-        yield p2.out.decode()
-        yield hr()
-        yield linesep
-
-    stdout.writelines(cont())
+    stdout.writelines((linesep, hr(), linesep))
     stdout.flush()
-
-    await pretty_diff(p3.out, path=None)
+    await pretty_diff(proc.out, path=None)
