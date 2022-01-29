@@ -20,8 +20,8 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
             fd.write(content)
             fd.flush()
             await call(
-                cmd,
                 "--color=always",
+                cmd,
                 "--",
                 fd.name,
                 capture_stdout=False,
@@ -33,13 +33,11 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
 
 
 async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
-    pager = environ.get("GIT_PAGER")
-    if pager:
-        parts = split(pager)
-        prog, *args = reversed(tuple(takewhile(lambda p: p != "|", reversed(parts))))
-        if which(prog):
+    if pager := split(environ.get("GIT_PAGER", "")):
+        prog, *args = reversed(tuple(takewhile(lambda p: p != "|", reversed(pager))))
+        if cmd := which(prog):
             await call(
-                prog,
+                cmd,
                 *args,
                 stdin=diff,
                 capture_stdout=False,
