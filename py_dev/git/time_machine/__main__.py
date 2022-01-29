@@ -61,7 +61,7 @@ async def _fzf_rhs(unified: int, sha: str, path: PurePath) -> None:
         diff = await _git_show_diff(unified, sha=sha, path=path)
         await pretty_diff(diff, path=path)
     else:
-        await _git_show_file(f"{sha}~", path=path)
+        await _git_show_file(sha, path=path)
 
 
 def _parse_args() -> Namespace:

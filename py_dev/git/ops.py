@@ -1,6 +1,5 @@
 from itertools import takewhile
 from os import environ
-from os.path import normcase
 from pathlib import Path, PurePath
 from shlex import split
 from shutil import which
@@ -29,7 +28,7 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
                 capture_stderr=False,
             )
     else:
-        pretty = pprn_basic(normcase(path) if path else None, text=content.decode())
+        pretty = pprn_basic(path, text=content.decode())
         stdout.write(pretty)
 
 
