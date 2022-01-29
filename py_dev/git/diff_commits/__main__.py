@@ -81,8 +81,8 @@ async def main() -> int:
         await _fzf_rhs(args.unified, older=older, newer=newer, path=path)
 
     else:
-        commits = await _git_file_diff(older=older, newer=newer)
-        await _fzf_lhs(args.unified, older=older, newer=newer, files=commits)
+        files = await _git_file_diff(older=older, newer=newer)
+        await _fzf_lhs(args.unified, older=older, newer=newer, files=files)
 
     return 0
 
