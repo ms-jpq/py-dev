@@ -9,26 +9,26 @@ from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
-async def _git_file_diff(sha1: str, sha2: str) -> bytes:
+async def _git_file_diff(pre: str, post: str) -> bytes:
     proc = await call(
         "git",
         "diff",
         "--name-only",
         "-z",
-        sha1,
-        sha2,
+        pre,
+        post,
         capture_stderr=False,
     )
     return proc.out.strip(b"\0")
 
 
-async def _git_diff_single(unified: int, sha1: str, sha2: str, path: PurePath) -> bytes:
+async def _git_diff_single(unified: int, pre: str, post: str, path: PurePath) -> bytes:
     proc = await call(
         "git",
         "diff",
         f"--unified={unified}",
-        sha1,
-        sha2,
+        pre,
+        post,
         "--",
         path,
         capture_stderr=False,
@@ -36,23 +36,23 @@ async def _git_diff_single(unified: int, sha1: str, sha2: str, path: PurePath) -
     return proc.out
 
 
-async def _fzf_lhs(unified: int, sha1: str, sha2: str, files: bytes) -> None:
+async def _fzf_lhs(unified: int, pre: str, post: str, files: bytes) -> None:
     await run_fzf(
         files,
-        p_args=(sha1, sha2, f"--unified={unified}", "--preview={f}"),
-        e_args=(sha1, sha2, f"--unified={unified}", "--execute={f}"),
+        p_args=(pre, post, f"--unified={unified}", "--preview={f}"),
+        e_args=(pre, post, f"--unified={unified}", "--execute={f}"),
     )
 
 
-async def _fzf_rhs(unified: int, sha1: str, sha2: str, path: PurePath) -> None:
-    diff = await _git_diff_single(unified, sha1=sha1, sha2=sha2, path=path)
+async def _fzf_rhs(unified: int, pre: str, post: str, path: PurePath) -> None:
+    diff = await _git_diff_single(unified, pre=pre, post=post, path=path)
     await pretty_diff(diff, path=path)
 
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("sha1")
-    parser.add_argument("sha2")
+    parser.add_argument("pre")
+    parser.add_argument("post")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
@@ -68,13 +68,13 @@ async def main() -> int:
 
     if args.preview:
         path = PurePath(Path(args.preview).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
+        await _fzf_rhs(args.unified, pre=args.pre, post=args.post, path=path)
     elif args.execute:
         path = PurePath(Path(args.execute).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, sha1=args.sha1, sha2=args.sha2, path=path)
+        await _fzf_rhs(args.unified, pre=args.pre, post=args.post, path=path)
     else:
-        commits = await _git_file_diff(sha1=args.sha1, sha2=args.sha2)
-        await _fzf_lhs(args.unified, sha1=args.sha1, sha2=args.sha2, files=commits)
+        commits = await _git_file_diff(pre=args.pre, post=args.post)
+        await _fzf_lhs(args.unified, pre=args.pre, post=args.post, files=commits)
 
     return 0
 
