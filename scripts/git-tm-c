@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+
+from py_dev.git.time_machine_commits import __main__
