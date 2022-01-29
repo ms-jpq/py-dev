@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from os.path import normcase
 from pathlib import Path, PurePath
 
 from std2.asyncio.subprocess import call
@@ -27,7 +28,6 @@ async def _git_show_file(sha: str, path: PurePath) -> None:
     proc = await call(
         "git",
         "show",
-        "--",
         f"{sha}:{path}",
         capture_stderr=False,
     )
@@ -48,11 +48,11 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
     return proc.out
 
 
-async def _fzf_lhs(unified: int, path: str, commits: bytes) -> None:
+async def _fzf_lhs(unified: int, path: PurePath, commits: bytes) -> None:
     await run_fzf(
         commits,
-        p_args=(path, f"--unified={unified}", "--preview={f}"),
-        e_args=(path, f"--unified={unified}", "--execute={f}"),
+        p_args=(normcase(path), f"--unified={unified}", "--preview={f}"),
+        e_args=(normcase(path), f"--unified={unified}", "--execute={f}"),
     )
 
 
@@ -66,7 +66,7 @@ async def _fzf_rhs(unified: int, sha: str, path: PurePath) -> None:
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("path")
+    parser.add_argument("path", type=PurePath)
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
@@ -85,7 +85,7 @@ async def main() -> int:
         await _fzf_rhs(args.unified, sha=sha, path=args.path)
     elif args.execute:
         sha, _, _ = Path(args.execute).read_text().rstrip("\0").partition(" ")
-        await _git_show_file(sha, path=PurePath(args.path))
+        await _git_show_file(sha, path=args.path)
     else:
         commits = await _git_file_log(args.path)
         await _fzf_lhs(args.unified, path=args.path, commits=commits)
