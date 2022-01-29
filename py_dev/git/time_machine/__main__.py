@@ -6,7 +6,7 @@ from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pprn, pretty_diff
+from ..ops import pretty_diff, pretty_show_file
 from ..spec_parse import spec_parse
 
 
@@ -22,16 +22,6 @@ async def _git_file_log(path: PurePath) -> bytes:
         capture_stderr=False,
     )
     return proc.out.strip(b"\0")
-
-
-async def _git_show_file(sha: str, path: PurePath) -> None:
-    proc = await call(
-        "git",
-        "show",
-        f"{sha}:{path}",
-        capture_stderr=False,
-    )
-    await pprn(proc.out, path=path)
 
 
 async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
@@ -61,7 +51,7 @@ async def _fzf_rhs(unified: int, sha: str, path: PurePath) -> None:
         diff = await _git_show_diff(unified, sha=sha, path=path)
         await pretty_diff(diff, path=path)
     else:
-        await _git_show_file(sha, path=path)
+        await pretty_show_file(sha, path=path)
 
 
 def _parse_args() -> Namespace:
@@ -85,7 +75,7 @@ async def main() -> int:
         await _fzf_rhs(args.unified, sha=sha, path=args.path)
     elif args.execute:
         sha, _, _ = Path(args.execute).read_text().rstrip("\0").partition(" ")
-        await _git_show_file(sha, path=args.path)
+        await pretty_show_file(sha, path=args.path)
     else:
         commits = await _git_file_log(args.path)
         await _fzf_lhs(args.unified, path=args.path, commits=commits)

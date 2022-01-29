@@ -39,13 +39,21 @@ async def _git_show_commit(sha: str) -> None:
         "git",
         "show",
         "--submodule",
-        "--stat",
+        "--no-patch",
         "--color",
         sha,
-        capture_stdout=False,
         capture_stderr=False,
     )
     c2 = call(
+        "git",
+        "diff-tree",
+        "--no-commit-id",
+        "--name-status",
+        "-r",
+        sha,
+        capture_stderr=False,
+    )
+    c3 = call(
         "git",
         "show",
         "--submodule",
@@ -53,9 +61,15 @@ async def _git_show_commit(sha: str) -> None:
         sha,
         capture_stderr=False,
     )
-    _, proc = await gather(c1, c2)
-    stdout.write(linesep * 3)
-    await pretty_diff(proc.out, path=None)
+
+    hr = lambda n: stdout.buffer.write(linesep.encode() * n)
+    p1, p2, p3 = await gather(c1, c2, c3)
+    stdout.buffer.write(p1.out)
+    hr(2)
+    stdout.buffer.write(p2.out)
+    hr(1)
+    stdout.flush()
+    await pretty_diff(p3.out, path=None)
 
 
 def _parse_args() -> Namespace:

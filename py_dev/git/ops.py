@@ -38,3 +38,12 @@ async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
         )
     else:
         await pprn(diff, path=path)
+
+async def pretty_show_file(sha: str, path: PurePath) -> None:
+    proc = await call(
+        "git",
+        "show",
+        f"{sha}:{path}",
+        capture_stderr=False,
+    )
+    await pprn(proc.out, path=path)

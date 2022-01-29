@@ -12,7 +12,7 @@ from std2.shutil import hr_print
 from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pprn
+from ..ops import pretty_show_file
 from ..spec_parse import spec_parse
 
 
@@ -44,13 +44,7 @@ async def _fzf_lhs(paths: Iterable[Tuple[str, str, PurePath]]) -> None:
 
 
 async def _fzf_rhs(sha: str, path: PurePath) -> None:
-    proc = await call(
-        "git",
-        "show",
-        f"{sha}:{path}",
-        capture_stderr=False,
-    )
-    await pprn(proc.out, path=path)
+    await pretty_show_file(sha, path)
 
 
 async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
