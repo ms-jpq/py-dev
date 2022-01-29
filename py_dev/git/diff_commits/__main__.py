@@ -1,5 +1,4 @@
 from argparse import ArgumentParser, Namespace
-from os import linesep
 from pathlib import Path, PurePath
 from typing import Iterator
 
@@ -27,9 +26,8 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
         while True:
             if status := next(it, None):
                 if status[:1] == b"R":
-                    yield linesep.encode().join((status, next(it), next(it)))
-                else:
-                    yield linesep.encode().join((status, next(it)))
+                    next(it)
+                yield status + b" " + next(it)
             else:
                 break
 
@@ -87,11 +85,11 @@ async def main() -> int:
     older, newer = args.older, args.newer
 
     if preview := args.preview:
-        _, _, path = Path(preview).read_text().rstrip("\0").rpartition(" ")
+        _, _, path = Path(preview).read_text().rstrip("\0").partition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     elif execute := args.execute:
-        _, _, path = Path(execute).read_text().rstrip("\0").rpartition(" ")
+        _, _, path = Path(execute).read_text().rstrip("\0").partition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     else:
