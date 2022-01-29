@@ -23,7 +23,7 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
         "--diff-filter=D",
         "--name-only",
         "--relative-date",
-        "--color=always",
+        "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         capture_stderr=False,
     )

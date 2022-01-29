@@ -69,6 +69,7 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "log",
         "--max-count=1",
         "--relative-date",
+        "--color",
         "--name-status",
         sha,
         capture_stdout=False,
