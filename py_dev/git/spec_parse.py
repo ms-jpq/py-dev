@@ -7,9 +7,10 @@ EOF = "\04"
 def spec_parse(parser: ArgumentParser) -> Namespace:
     try:
         _, a1, a2 = argv
+    except ValueError:
+        return parser.parse_args()
+    else:
         if a1 == "-c":
             return parser.parse_args(a2.split(EOF))
         else:
             return parser.parse_args()
-    except ValueError:
-        return parser.parse_args()
