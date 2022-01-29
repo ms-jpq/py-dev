@@ -65,16 +65,19 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
+    dst, src = args.dst, args.src
 
     if args.preview:
         path = PurePath(Path(args.preview).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, dst=args.src, src=args.dst, path=path)
+        await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
+
     elif args.execute:
         path = PurePath(Path(args.execute).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, dst=args.src, src=args.dst, path=path)
+        await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
+
     else:
-        commits = await _git_file_diff(dst=args.pre, src=args.post)
-        await _fzf_lhs(args.unified, dst=args.src, src=args.dst, files=commits)
+        commits = await _git_file_diff(dst=args.dst, src=args.post)
+        await _fzf_lhs(args.unified, dst=dst, src=src, files=commits)
 
     return 0
 
