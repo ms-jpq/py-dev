@@ -30,7 +30,7 @@ async def main() -> int:
     )
     await call(
         "git",
-        "checkout",
+        "switch",
         br_name,
         capture_stdout=False,
         capture_stderr=False,
