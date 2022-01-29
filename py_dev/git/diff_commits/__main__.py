@@ -78,11 +78,11 @@ async def main() -> int:
     older, newer = args.older, args.newer
 
     if preview := args.preview:
-        path, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
+        _, _, path = Path(preview).read_text().rstrip("\0").partition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     elif execute := args.execute:
-        path, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
+        _, _, path = Path(execute).read_text().rstrip("\0").partition(" ")
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     else:
