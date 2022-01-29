@@ -26,6 +26,7 @@ async def _git_diff_single(unified: int, dst: str, src: str, path: PurePath) -> 
     proc = await call(
         "git",
         "diff",
+        "--color-moved-ws=ignore-space-change",
         f"--unified={unified}",
         dst,
         src,

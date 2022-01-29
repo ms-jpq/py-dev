@@ -58,6 +58,7 @@ async def _git_show_commit(sha: str) -> None:
         "git",
         "show",
         "--submodule",
+        "--ignore-space-change",
         "--pretty=format:",
         sha,
         capture_stderr=False,
