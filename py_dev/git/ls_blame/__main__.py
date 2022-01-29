@@ -1,18 +1,14 @@
 from argparse import ArgumentParser, Namespace
-from asyncio import gather
-from os import linesep
 from pathlib import Path, PurePath
 from posixpath import normcase
+from shutil import which
 from sys import stdout
-from typing import AsyncIterator, Iterable, Tuple
+from typing import AsyncIterator, Iterable
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr
 
-from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_diff
 from ..spec_parse import spec_parse
 
 
@@ -29,19 +25,26 @@ async def _git_ls_files() -> AsyncIterator[PurePath]:
 
 async def _fzf_lhs(paths: Iterable[PurePath]) -> None:
     stdin = "\0".join(map(normcase, paths)).encode()
-    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
 
 
-async def _git_show_blame(paths: Iterable[PurePath]) -> None:
-    for path in paths:
+async def _git_show_blame(path: PurePath) -> None:
+    proc = await call(
+        "git",
+        "blame",
+        "--",
+        path,
+        capture_stderr=False,
+    )
+    if delta := which("delta"):
         await call(
-            "git",
-            "blame",
-            "--",
-            path,
+            delta,
+            stdin=proc.out,
             capture_stdout=False,
             capture_stderr=False,
         )
+    else:
+        stdout.buffer.write(proc.out)
 
 
 def _parse_args() -> Namespace:
@@ -56,12 +59,10 @@ async def main() -> int:
     args = _parse_args()
     if args.preview:
         preview = Path(args.preview).read_text().rstrip("\0")
-        paths = map(PurePath, preview.splitlines())
-        await _git_show_blame(paths)
+        await _git_show_blame(PurePath(preview))
     elif args.execute:
         execute = Path(args.execute).read_text().rstrip("\0")
-        paths = map(PurePath, execute.splitlines())
-        await _git_show_blame(paths)
+        await _git_show_blame(PurePath(execute))
     else:
         paths = [el async for el in _git_ls_files()]
         await _fzf_lhs(paths)
