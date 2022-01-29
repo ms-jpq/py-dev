@@ -1,8 +1,6 @@
 from argparse import ArgumentParser, Namespace
-from asyncio import gather
 from os import linesep
 from pathlib import Path
-from sys import stdout
 from typing import AsyncIterator, Iterable, Tuple
 
 from std2.asyncio.subprocess import call
@@ -11,7 +9,7 @@ from std2.shutil import hr
 from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_diff
+from ..ops import pretty_commit
 from ..spec_parse import spec_parse
 
 
@@ -38,56 +36,6 @@ async def _fzf_lhs(unified: int, commits: Iterable[Tuple[str, str]]) -> None:
     )
 
 
-async def _git_show_commit(unified: int, sha: str) -> None:
-    c1 = call(
-        "git",
-        "show",
-        "--submodule",
-        "--no-patch",
-        "--color",
-        sha,
-        capture_stderr=False,
-    )
-    c2 = call(
-        "git",
-        "diff-tree",
-        "--no-commit-id",
-        "--find-renames",
-        "--name-status",
-        "-r",
-        sha,
-        capture_stderr=False,
-    )
-    c3 = call(
-        "git",
-        "show",
-        "--submodule",
-        "--color-moved=dimmed-zebra",
-        "--color-moved-ws=ignore-space-change",
-        "--ignore-space-change",
-        f"--unified={unified}",
-        "--pretty=format:",
-        sha,
-        capture_stderr=False,
-    )
-
-    p1, p2, p3 = await gather(c1, c2, c3)
-
-    def cont() -> Iterable[str]:
-        yield p1.out.decode()
-        yield linesep
-        yield hr()
-        yield linesep
-        yield p2.out.decode()
-        yield hr()
-        yield linesep
-
-    stdout.writelines(cont())
-    stdout.flush()
-
-    await pretty_diff(p3.out, path=None)
-
-
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group()
@@ -104,7 +52,7 @@ async def main() -> int:
 
     if preview := args.preview:
         sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
-        await _git_show_commit(args.unified, sha=sha)
+        await pretty_commit(args.unified, sha=sha)
 
     elif execute := args.execute:
 

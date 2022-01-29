@@ -1,61 +1,39 @@
 from argparse import ArgumentParser, Namespace
-from pathlib import Path, PurePath
+from itertools import chain, repeat
+from pathlib import Path
 
 from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_diff
+from ..ops import pretty_commit
 from ..spec_parse import spec_parse
 
 
-async def _git_file_diff(dst: str, src: str) -> bytes:
+async def _ls_commits(search: str, *searches: str) -> bytes:
     proc = await call(
         "git",
-        "diff",
-        "--name-only",
-        "-z",
-        dst,
-        src,
+        "log",
+        "--relative-date",
+        "--color",
+        "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
+        *chain.from_iterable(zip(repeat("-S"), chain((search,), searches))),
         capture_stderr=False,
     )
     return proc.out.strip(b"\0")
 
 
-async def _git_diff_single(unified: int, dst: str, src: str, path: PurePath) -> bytes:
-    proc = await call(
-        "git",
-        "diff",
-        "--color-moved=dimmed-zebra",
-        "--color-moved-ws=ignore-space-change",
-        "--ignore-space-change",
-        f"--unified={unified}",
-        dst,
-        src,
-        "--",
-        path,
-        capture_stderr=False,
-    )
-    return proc.out
-
-
-async def _fzf_lhs(unified: int, dst: str, src: str, files: bytes) -> None:
+async def _fzf_lhs(unified: int, *search: str, commits: bytes) -> None:
     await run_fzf(
-        files,
-        p_args=(dst, src, f"--unified={unified}", "--preview={f}"),
-        e_args=(dst, src, f"--unified={unified}", "--execute={f}"),
+        commits,
+        p_args=(*search, f"--unified={unified}", "--preview={f}"),
+        e_args=(*search, f"--unified={unified}", "--execute={f}"),
     )
-
-
-async def _fzf_rhs(unified: int, dst: str, src: str, path: PurePath) -> None:
-    diff = await _git_diff_single(unified, dst=dst, src=src, path=path)
-    await pretty_diff(diff, path=path)
 
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("dst")
-    parser.add_argument("src", nargs="?", default="HEAD")
+    parser.add_argument("search", nargs="+")
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--preview")
@@ -68,19 +46,18 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
-    dst, src = args.dst, args.src
 
     if preview := args.preview:
-        path = PurePath(Path(preview).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
+        sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
+        await pretty_commit(args.unified, sha=sha)
 
     elif execute := args.execute:
-        path = PurePath(Path(execute).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
+        sha, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
+        await pretty_commit(args.unified, sha=sha)
 
     else:
-        commits = await _git_file_diff(dst=dst, src=src)
-        await _fzf_lhs(args.unified, dst=dst, src=src, files=commits)
+        commits = await _ls_commits(*args.search)
+        await _fzf_lhs(args.unified, *args.search, commits=commits)
 
     return 0
 

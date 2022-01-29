@@ -6,7 +6,7 @@ from std2.asyncio.subprocess import call
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_diff, pretty_show_file
+from ..ops import pretty_diff, pretty_file
 from ..spec_parse import spec_parse
 
 
@@ -54,7 +54,7 @@ async def _fzf_rhs(unified: int, sha: str, path: PurePath) -> None:
         diff = await _git_show_diff(unified, sha=sha, path=path)
         await pretty_diff(diff, path=path)
     else:
-        await pretty_show_file(sha, path=path)
+        await pretty_file(sha, path=path)
 
 
 def _parse_args() -> Namespace:
@@ -79,7 +79,7 @@ async def main() -> int:
 
     elif execute := args.execute:
         sha, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
-        await pretty_show_file(sha, path=args.path)
+        await pretty_file(sha, path=args.path)
 
     else:
         commits = await _git_file_log(args.path)
