@@ -70,7 +70,6 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "--find-renames",
         "--find-copies",
         "--max-count=1",
-        "--relative-date",
         "--color",
         "--name-status",
         sha,

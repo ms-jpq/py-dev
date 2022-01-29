@@ -16,7 +16,6 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
         "log",
         "--find-renames",
         "--find-copies",
-        "--relative-date",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         *(() if regex else ("--fixed-strings",)),
