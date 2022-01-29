@@ -1,9 +1,9 @@
 from argparse import ArgumentParser, Namespace
+from os import linesep
 from pathlib import Path, PurePath
 from typing import Iterator
 
 from std2.asyncio.subprocess import call
-from std2.itertools import chunk
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -27,9 +27,9 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
         while True:
             if status := next(it, None):
                 if status[:1] == b"R":
-                    yield b" ".join((status, next(it), next(it)))
+                    yield linesep.encode().join((status, next(it), next(it)))
                 else:
-                    yield b" ".join((status, next(it)))
+                    yield linesep.encode().join((status, next(it)))
             else:
                 break
 
