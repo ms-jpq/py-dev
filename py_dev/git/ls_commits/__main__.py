@@ -6,7 +6,7 @@ from sys import stdout
 from typing import AsyncIterator, Iterable, Tuple
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr_print
+from std2.shutil import hr, hr_print
 
 from ...log import log
 from ...run import run_main
@@ -48,6 +48,7 @@ async def _git_show_commit(sha: str) -> None:
         "git",
         "diff-tree",
         "--no-commit-id",
+        "--find-renames",
         "--name-status",
         "-r",
         sha,
@@ -62,12 +63,18 @@ async def _git_show_commit(sha: str) -> None:
         capture_stderr=False,
     )
 
-
     p1, p2, p3 = await gather(c1, c2, c3)
-    stdout.buffer.write(p1.out)
-    stdout.buffer.write(linesep.encode() * 2)
-    stdout.buffer.write(p2.out)
-    stdout.buffer.write(linesep.encode() * 1)
+
+    def cont() -> Iterable[str]:
+        yield p1.out.decode()
+        yield linesep
+        yield hr()
+        yield linesep
+        yield p2.out.decode()
+        yield hr()
+        yield linesep
+
+    stdout.writelines(cont())
     stdout.flush()
 
     await pretty_diff(p3.out, path=None)
