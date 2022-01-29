@@ -1,4 +1,6 @@
+from os import environ
 from pathlib import PurePath
+from shlex import split
 from shutil import which
 from sys import stdout
 from tempfile import NamedTemporaryFile
@@ -29,15 +31,25 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
 
 
 async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
-    if delta := which("delta"):
+    if args := split(environ.get("GIT_PAGER", "")):
+        await call(
+            *args,
+            stdin=diff,
+            capture_stdout=False,
+            capture_stderr=False,
+        )
+
+    elif delta := which("delta"):
         await call(
             delta,
             stdin=diff,
             capture_stdout=False,
             capture_stderr=False,
         )
+
     else:
         await pprn(diff, path=path)
+
 
 async def pretty_show_file(sha: str, path: PurePath) -> None:
     proc = await call(
