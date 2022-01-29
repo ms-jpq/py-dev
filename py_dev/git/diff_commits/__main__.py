@@ -2,6 +2,7 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path, PurePath
 
 from std2.asyncio.subprocess import call
+from std2.itertools import chunk
 
 from ...run import run_main
 from ..fzf import run_fzf
@@ -19,7 +20,11 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
         newer,
         capture_stderr=False,
     )
-    return proc.out.strip(b"\0")
+    lines = b"\0".join(
+        status + b" " + path
+        for status, path in chunk(proc.out.rstrip(b"\0").split(b"\0"), 2)
+    )
+    return lines
 
 
 async def _git_diff_single(
