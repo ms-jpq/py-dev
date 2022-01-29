@@ -57,12 +57,15 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
-    if args.preview:
-        preview = Path(args.preview).read_text().rstrip("\0")
-        await _git_show_blame(PurePath(preview))
-    elif args.execute:
-        execute = Path(args.execute).read_text().rstrip("\0")
-        await _git_show_blame(PurePath(execute))
+
+    if preview := args.preview:
+        preview_path = Path(preview).read_text().rstrip("\0")
+        await _git_show_blame(PurePath(preview_path))
+
+    elif execute := args.execute:
+        execute_path = Path(execute).read_text().rstrip("\0")
+        await _git_show_blame(PurePath(execute_path))
+
     else:
         paths = [el async for el in _git_ls_files()]
         await _fzf_lhs(paths)

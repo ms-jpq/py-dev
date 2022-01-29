@@ -67,12 +67,12 @@ async def main() -> int:
     args = _parse_args()
     dst, src = args.dst, args.src
 
-    if args.preview:
-        path = PurePath(Path(args.preview).read_text().rstrip("\0"))
+    if preview := args.preview:
+        path = PurePath(Path(preview).read_text().rstrip("\0"))
         await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
 
-    elif args.execute:
-        path = PurePath(Path(args.execute).read_text().rstrip("\0"))
+    elif execute := args.execute:
+        path = PurePath(Path(execute).read_text().rstrip("\0"))
         await _fzf_rhs(args.unified, dst=dst, src=src, path=path)
 
     else:

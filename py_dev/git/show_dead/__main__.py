@@ -74,19 +74,20 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
-    if args.preview:
-        preview = Path(args.preview).read_text().rstrip("\0")
-        sha, _, path = preview.split(linesep)
+
+    if preview := args.preview:
+        sha, _, path = Path(preview).read_text().rstrip("\0").split(linesep)
         await _fzf_rhs(sha, path=PurePath(path))
-    elif args.execute:
-        lines = Path(args.execute).read_text().rstrip("\0").split("\0")
+
+    elif execute := args.execute:
 
         def cont() -> Iterator[Tuple[str, PurePath]]:
-            for line in lines:
+            for line in Path(execute).read_text().rstrip("\0").split("\0"):
                 sha, _, path = line.split(linesep)
                 yield sha, PurePath(path)
 
         await _git_show_many(cont())
+
     else:
         paths = [path async for path in _git_dead_files()]
         await _fzf_lhs(paths)

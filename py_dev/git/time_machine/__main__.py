@@ -70,12 +70,14 @@ def _parse_args() -> Namespace:
 async def main() -> int:
     args = _parse_args()
 
-    if args.preview:
-        sha, _, _ = Path(args.preview).read_text().rstrip("\0").partition(" ")
+    if preview := args.preview:
+        sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
         await _fzf_rhs(args.unified, sha=sha, path=args.path)
-    elif args.execute:
-        sha, _, _ = Path(args.execute).read_text().rstrip("\0").partition(" ")
+
+    elif execute := args.execute:
+        sha, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
         await pretty_show_file(sha, path=args.path)
+
     else:
         commits = await _git_file_log(args.path)
         await _fzf_lhs(args.unified, path=args.path, commits=commits)

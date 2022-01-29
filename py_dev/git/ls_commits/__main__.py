@@ -90,19 +90,20 @@ def _parse_args() -> Namespace:
 
 async def main() -> int:
     args = _parse_args()
-    if args.preview:
-        preview = Path(args.preview).read_text().rstrip("\0")
-        sha, _, _ = preview.partition(" ")
+
+    if preview := args.preview:
+        sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
         await _git_show_commit(sha)
-    elif args.execute:
-        execute = Path(args.execute).read_text().rstrip("\0")
+
+    elif execute := args.execute:
 
         def cont() -> Iterable[str]:
-            for line in execute.split("\0"):
+            for line in Path(execute).read_text().rstrip("\0").split("\0"):
                 sha, _, _ = line.partition(" ")
                 yield sha
 
         log.info("%s", hr(linesep.join(cont())))
+
     else:
         commits = [el async for el in _git_ls_commits()]
         await _fzf_lhs(commits)
