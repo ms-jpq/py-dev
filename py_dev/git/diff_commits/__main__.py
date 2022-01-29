@@ -44,7 +44,6 @@ async def _git_diff_single(
         "diff",
         "--find-renames",
         "--find-copies",
-        "--ignore-space-change",
         f"--unified={unified}",
         older,
         newer,

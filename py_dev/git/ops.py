@@ -80,7 +80,6 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "git",
         "show",
         "--submodule",
-        "--ignore-space-change",
         f"--unified={unified}",
         "--pretty=format:",
         sha,

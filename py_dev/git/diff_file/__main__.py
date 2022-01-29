@@ -31,7 +31,6 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
         "diff",
         "--find-renames",
         "--find-copies",
-        "--ignore-space-change",
         f"--unified={unified}",
         f"{sha}~",
         sha,
