@@ -32,6 +32,7 @@ async def _git_show_blame(path: PurePath) -> None:
     proc = await call(
         "git",
         "blame",
+        "-w",
         "--",
         path,
         capture_stderr=False,
