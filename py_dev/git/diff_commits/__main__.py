@@ -13,7 +13,7 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
     proc = await call(
         "git",
         "diff",
-        "--name-only",
+        "--name-status",
         "-z",
         older,
         newer,
@@ -73,12 +73,12 @@ async def main() -> int:
     older, newer = args.older, args.newer
 
     if preview := args.preview:
-        path = PurePath(Path(preview).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, older=older, newer=newer, path=path)
+        path, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
+        await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     elif execute := args.execute:
-        path = PurePath(Path(execute).read_text().rstrip("\0"))
-        await _fzf_rhs(args.unified, older=older, newer=newer, path=path)
+        path, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
+        await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     else:
         files = await _git_file_diff(older=older, newer=newer)
