@@ -21,7 +21,7 @@ from std2.pathlib import POSIX_ROOT, is_relative_to
 
 from ..j2 import build, render
 
-_TEMPLATES = Path(__file__).resolve().parent / "templates"
+_TEMPLATES = Path(__file__).resolve(strict=True).parent / "templates"
 _INDEX = PurePath("index.html")
 
 
