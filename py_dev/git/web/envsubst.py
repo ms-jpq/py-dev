@@ -45,7 +45,7 @@ async def envsubst() -> None:
 
         gitweb_src = Path(p2.out.decode()).parent / "gitweb"
 
-        git_dir = Path(p3.out.decode())
+        git_dir = Path(p3.out.decode().rstrip())
         gitweb_dst = git_dir / "gitweb"
 
         cwd = gitweb_dst / "python"
@@ -57,12 +57,12 @@ async def envsubst() -> None:
         with suppress(FileExistsError):
             (cgi_bin / "static").symlink_to(gitweb_src / "static")
 
-        script = gitweb_dst / "/gitweb_config.perl"
+        script = gitweb_dst / "gitweb_config.perl"
         script_env = {
-            "TOP_LEVEL": Path(p4.out.decode()),
+            "TOP_LEVEL": Path(p4.out.decode().rstrip()),
             "TMP": gitweb_dst / "tmp",
         }
-        perl = render(j2, PurePath("git_web_config.perl"), env=script_env)
+        perl = render(j2, PurePath(script.name), env=script_env)
         script.write_text(perl)
 
         env = {
