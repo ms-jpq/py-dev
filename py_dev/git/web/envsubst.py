@@ -14,7 +14,7 @@ _TEMPLATES = Path(__file__).resolve(strict=True).parent / "templates"
 
 
 async def envsubst() -> None:
-    ascii = {*ascii_letters}
+    ascii = {*ascii_letters, *{"_", "-"}}
     j2 = build(_TEMPLATES)
 
     if git := which("git"):
