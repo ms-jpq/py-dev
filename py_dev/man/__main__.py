@@ -69,10 +69,9 @@ async def main() -> int:
             head, *rest = htmls
             web_path = "" if rest else quote(normcase(head))
 
-            if srv := serve(root, port=args.port, promiscuous=args.open):
-                httpd, port = srv
+            if httpd := serve(root, port=args.port, promiscuous=args.open):
                 host = httpd.server_name if args.open else "localhost"
-                location = f"http://{host}:{port}/{web_path}"
+                location = f"http://{host}:{httpd.server_port}/{web_path}"
                 w_open(location)
 
                 log.info("%s", hr(f"MAN -- {location}"))

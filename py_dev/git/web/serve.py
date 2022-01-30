@@ -57,4 +57,4 @@ def serve(port: int, promiscuous: bool) -> Optional[HTTPServer]:
         log.fatal("%s", hr(e))
         return None
     else:
-        return httpd, httpd.server_port
+        return httpd
