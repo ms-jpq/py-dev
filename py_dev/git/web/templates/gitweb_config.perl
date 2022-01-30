@@ -6,6 +6,7 @@ our $projects_list = $projectroot;
 
 # ADDN
 our $prevent_xss = !0;
+our $omit_owner = !0;
 our $fallback_encoding = "utf-16";
 our $site_name = "{{ TITLE }}";
 
