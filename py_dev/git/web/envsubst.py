@@ -1,4 +1,5 @@
 from asyncio.tasks import gather
+from contextlib import suppress
 from os import chdir, environ
 from pathlib import Path, PurePath
 from posixpath import normcase
@@ -51,8 +52,10 @@ async def envsubst() -> None:
         cgi_bin = cwd / "cgi-bin"
         cgi_bin.mkdir(parents=True, exist_ok=True)
 
-        (cgi_bin / "gitweb.cgi").symlink_to(gitweb_src / "gitweb.cgi")
-        (cgi_bin / "static").symlink_to(gitweb_src / "static")
+        with suppress(FileExistsError):
+            (cgi_bin / "gitweb.cgi").symlink_to(gitweb_src / "gitweb.cgi")
+        with suppress(FileExistsError):
+            (cgi_bin / "static").symlink_to(gitweb_src / "static")
 
         script = gitweb_dst / "/gitweb_config.perl"
         script_env = {
