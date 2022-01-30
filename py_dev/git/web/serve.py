@@ -2,7 +2,7 @@ from http import HTTPStatus
 from http.server import CGIHTTPRequestHandler, HTTPServer
 from ipaddress import ip_address
 from pathlib import PurePosixPath
-from typing import Optional, Tuple
+from typing import Optional
 from urllib.parse import urlsplit
 
 from std2.http.server import create_server
@@ -20,14 +20,11 @@ def _path(Handler: CGIHTTPRequestHandler) -> PurePosixPath:
 
 
 def _maybe_redirect(handler: CGIHTTPRequestHandler) -> None:
-    # def redirect_path(self):
-    #     if not self.path.startswith("/cgi-bin/gitweb.cgi"):
-    #         self.path = self.path.replace("/cgi-bin/", "/")
     if _path(handler) == _CGI_BIN:
         handler.path = str(POSIX_ROOT)
 
 
-def serve(port: int, promiscuous: bool) -> Optional[Tuple[HTTPServer, int]]:
+def serve(port: int, promiscuous: bool) -> Optional[HTTPServer]:
     bind = ("" if promiscuous else ip_address("::1"), port)
 
     class Handler(CGIHTTPRequestHandler):
@@ -60,5 +57,4 @@ def serve(port: int, promiscuous: bool) -> Optional[Tuple[HTTPServer, int]]:
         log.fatal("%s", hr(e))
         return None
     else:
-        _, actual_port, *_ = httpd.socket.getsockname()
-        return httpd, actual_port
+        return httpd, httpd.server_port

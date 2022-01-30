@@ -31,21 +31,22 @@ async def envsubst() -> None:
                 git,
                 "--no-optional-locks",
                 "rev-parse",
-                "--git-common-dir",
+                "--show-toplevel",
                 capture_stderr=False,
             ),
             call(
                 git,
                 "--no-optional-locks",
                 "rev-parse",
-                "--show-toplevel",
+                "--git-common-dir",
                 capture_stderr=False,
             ),
         )
 
         gitweb_src = Path(p2.out.decode()).parent / "gitweb"
+        top_level = Path(p3.out.decode().rstrip())
 
-        git_dir = Path(p3.out.decode().rstrip())
+        git_dir = top_level / p4.out.decode().rstrip()
         gitweb_dst = git_dir / "gitweb"
 
         cwd = gitweb_dst / "python"
@@ -59,7 +60,7 @@ async def envsubst() -> None:
 
         script = gitweb_dst / "gitweb_config.perl"
         script_env = {
-            "TOP_LEVEL": Path(p4.out.decode().rstrip()),
+            "TOP_LEVEL": top_level,
             "TMP": gitweb_dst / "tmp",
         }
         perl = render(j2, PurePath(script.name), env=script_env)

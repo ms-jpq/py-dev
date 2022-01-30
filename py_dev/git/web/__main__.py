@@ -20,10 +20,9 @@ async def main() -> int:
     args = _parse_args()
     await envsubst()
 
-    if srv := serve(args.port, promiscuous=args.open):
-        httpd, port = srv
+    if httpd := serve(args.port, promiscuous=args.open):
         host = httpd.server_name if args.open else "localhost"
-        location = f"http://{host}:{port}"
+        location = f"http://{host}:{httpd.server_port}"
         w_open(location)
 
         log.info("%s", hr(f"SERVING -- {location}"))

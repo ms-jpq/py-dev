@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from ipaddress import ip_address
 from pathlib import Path, PurePath
-from typing import Optional, Tuple
+from typing import Optional
 
 from std2.http.server import create_server
 from std2.shutil import hr
@@ -10,9 +10,7 @@ from ..log import log
 from .static import build_j2, get, head
 
 
-def serve(
-    root: PurePath, port: int, promiscuous: bool
-) -> Optional[Tuple[HTTPServer, int]]:
+def serve(root: PurePath, port: int, promiscuous: bool) -> Optional[HTTPServer]:
     bind = ("" if promiscuous else ip_address("::1"), port)
     j2 = build_j2()
 
@@ -31,5 +29,4 @@ def serve(
         log.fatal("%s", hr(e))
         return None
     else:
-        _, actual_port, *_ = httpd.socket.getsockname()
-        return httpd, actual_port
+        return httpd
