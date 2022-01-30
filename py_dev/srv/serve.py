@@ -11,7 +11,7 @@ from .static import build_j2, get, head
 
 
 def serve(root: PurePath, port: int, promiscuous: bool) -> Optional[HTTPServer]:
-    bind = ("" if promiscuous else ip_address("::1"), port)
+    bind = ("" if promiscuous else ip_address("::1")), port
     j2 = build_j2()
 
     try:

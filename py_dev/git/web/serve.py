@@ -2,7 +2,7 @@ from http import HTTPStatus
 from http.server import CGIHTTPRequestHandler, HTTPServer
 from ipaddress import ip_address
 from pathlib import PurePosixPath
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import urlsplit
 
 from std2.http.server import create_server
@@ -25,7 +25,7 @@ def _maybe_redirect(handler: CGIHTTPRequestHandler) -> None:
 
 
 def serve(port: int, promiscuous: bool) -> Optional[HTTPServer]:
-    bind = ("" if promiscuous else ip_address("::1"), port)
+    bind = ("" if promiscuous else ip_address("::1")), port
 
     class Handler(CGIHTTPRequestHandler):
         def is_cgi(self) -> bool:
@@ -50,6 +50,9 @@ def serve(port: int, promiscuous: bool) -> Optional[HTTPServer]:
         def do_POST(self) -> None:
             _maybe_redirect(self)
             super().do_POST()
+
+        def log_message(self, format: str, *args: Any) -> None:
+            ...
 
     try:
         httpd = create_server(bind, Handler)
