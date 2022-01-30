@@ -10,7 +10,6 @@ from typing import Sequence, Tuple
 def _parse_args() -> Tuple[Namespace, Sequence[str]]:
     parser = ArgumentParser(add_help=False)
     parser.add_argument("path", type=PurePath)
-    parser.add_argument("cmd", type=PurePath)
     return parser.parse_known_args()
 
 
@@ -27,8 +26,8 @@ def main() -> int:
 
     env = {**environ, **addn}
 
-    if cmd := which(args.cmd):
-        execle(cmd, normcase(cmd), *argv, env)
+    if git := which("git"):
+        execle(git, normcase(git), *argv, env)
     else:
         raise OSError(args.cmd)
 
