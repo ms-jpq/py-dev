@@ -4,8 +4,8 @@ from webbrowser import open as w_open
 
 from std2.shutil import hr
 
-from ..log import log
-from ..run import run_main
+from ...log import log
+from ...run import run_main
 from .serve import serve
 
 

@@ -6,7 +6,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from locale import strxfrm
 from mimetypes import guess_type
-from os import altsep, scandir, sep, stat_result
+from os import scandir, sep, stat_result
 from os.path import normcase
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 from jinja2 import Environment
 from std2.datetime import utc_to_local
 from std2.locale import si_prefixed
-from std2.pathlib import is_relative_to
+from std2.pathlib import POSIX_ROOT, is_relative_to
 
 from ..j2 import build, render
 
@@ -145,7 +145,7 @@ def head(
     j2: Environment,
     handler: BaseHTTPRequestHandler,
     root: Path,
-    prefix: PurePosixPath = PurePosixPath(altsep or sep),
+    prefix: PurePosixPath = POSIX_ROOT,
 ) -> None:
     fds = _seek(handler, prefix=prefix, root=root)
 
@@ -163,7 +163,7 @@ def get(
     j2: Environment,
     handler: BaseHTTPRequestHandler,
     root: Path,
-    prefix: PurePosixPath = PurePosixPath(altsep or sep),
+    prefix: PurePosixPath = POSIX_ROOT,
 ) -> None:
     fd = _seek(handler, prefix=prefix, root=root)
 
