@@ -25,7 +25,7 @@ async def main() -> int:
         location = f"http://{host}:{httpd.server_port}"
         w_open(location)
 
-        log.info("%s", hr(f"SERVING -- {location}"))
+        log.info("%s", hr(f"SRV -- {location}"))
         httpd.serve_forever()
         return 0
     else:
