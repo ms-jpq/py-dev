@@ -1,6 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from itertools import chain, repeat
 from pathlib import Path
+from shlex import join
+from sys import stdout
+from typing import Iterator
 
 from std2.asyncio.subprocess import call
 
@@ -27,7 +30,7 @@ async def _fzf_lhs(unified: int, *search: str, commits: bytes) -> None:
     await run_fzf(
         commits,
         p_args=(*search, f"--unified={unified}", "--preview={f}"),
-        e_args=(*search, f"--unified={unified}", "--execute={f}"),
+        e_args=(*search, f"--unified={unified}", "--execute={+f}"),
     )
 
 
@@ -53,8 +56,13 @@ async def main() -> int:
         await pretty_commit(args.unified, sha=sha)
 
     elif execute := args.execute:
-        sha, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
-        await pretty_commit(args.unified, sha=sha)
+
+        def cont() -> Iterator[str]:
+            for line in Path(execute).read_text().split("\0"):
+                sha, _, _ = line.partition(" ")
+                yield sha
+
+        stdout.write(join(cont()))
 
     else:
         commits = await _ls_commits(args.regex, *args.search)

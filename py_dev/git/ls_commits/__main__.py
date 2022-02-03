@@ -1,12 +1,11 @@
 from argparse import ArgumentParser, Namespace
-from os import linesep
 from pathlib import Path
-from typing import AsyncIterator, Iterable, Tuple
+from shlex import join
+from sys import stdout
+from typing import AsyncIterator, Iterable, Iterator, Tuple
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr
 
-from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_commit
@@ -55,12 +54,12 @@ async def main() -> int:
 
     elif execute := args.execute:
 
-        def cont() -> Iterable[str]:
+        def cont() -> Iterator[str]:
             for line in Path(execute).read_text().rstrip("\0").split("\0"):
                 sha, _, _ = line.partition(" ")
                 yield sha
 
-        log.info("%s", hr(linesep.join(cont())))
+        stdout.write(join(cont()))
 
     else:
         commits = [el async for el in _git_ls_commits()]

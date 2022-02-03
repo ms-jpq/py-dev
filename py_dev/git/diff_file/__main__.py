@@ -1,6 +1,9 @@
 from argparse import ArgumentParser, Namespace
 from os.path import normcase
 from pathlib import Path, PurePath
+from shlex import join
+from sys import stdout
+from typing import Iterator
 
 from std2.asyncio.subprocess import call
 
@@ -41,7 +44,7 @@ async def _fzf_lhs(unified: int, path: PurePath, commits: bytes) -> None:
     await run_fzf(
         commits,
         p_args=(normcase(path), f"--unified={unified}", "--preview={f}"),
-        e_args=(normcase(path), f"--unified={unified}", "--execute={f}"),
+        e_args=(normcase(path), f"--unified={unified}", "--execute={+f}"),
     )
 
 
@@ -74,8 +77,13 @@ async def main() -> int:
         await _fzf_rhs(args.unified, sha=sha, path=args.path)
 
     elif execute := args.execute:
-        sha, _, _ = Path(execute).read_text().rstrip("\0").partition(" ")
-        await pretty_file(sha, path=args.path)
+
+        def cont() -> Iterator[str]:
+            for line in Path(execute).read_text().split("\0"):
+                sha, _, _ = line.partition(" ")
+                yield sha
+
+        stdout.write(join(cont()))
 
     else:
         commits = await _git_file_log(args.path)

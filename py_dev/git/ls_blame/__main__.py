@@ -1,9 +1,10 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path, PurePath
 from posixpath import normcase
+from shlex import join
 from shutil import which
 from sys import stdout
-from typing import AsyncIterator, Iterable
+from typing import AsyncIterator, Iterable, Iterator
 
 from std2.asyncio.subprocess import call
 
@@ -25,7 +26,7 @@ async def _git_ls_files() -> AsyncIterator[PurePath]:
 
 async def _fzf_lhs(paths: Iterable[PurePath]) -> None:
     stdin = "\0".join(map(normcase, paths)).encode()
-    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={f}",))
+    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
 
 
 async def _git_show_blame(path: PurePath) -> None:
@@ -64,8 +65,12 @@ async def main() -> int:
         await _git_show_blame(PurePath(preview_path))
 
     elif execute := args.execute:
-        execute_path = Path(execute).read_text().rstrip("\0")
-        await _git_show_blame(PurePath(execute_path))
+
+        def cont() -> Iterator[str]:
+            for path in Path(execute).read_text().split("\0"):
+                yield path
+
+        stdout.write(join(cont()))
 
     else:
         paths = [el async for el in _git_ls_files()]

@@ -1,5 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path, PurePath
+from shlex import join
+from sys import stdout
 from typing import Iterator
 
 from std2.asyncio.subprocess import call
@@ -54,7 +56,7 @@ async def _fzf_lhs(unified: int, older: str, newer: str, files: bytes) -> None:
     await run_fzf(
         files,
         p_args=(older, newer, f"--unified={unified}", "--preview={f}"),
-        e_args=(older, newer, f"--unified={unified}", "--execute={f}"),
+        e_args=(older, newer, f"--unified={unified}", "--execute={+f}"),
     )
 
 
@@ -86,8 +88,13 @@ async def main() -> int:
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
     elif execute := args.execute:
-        _, _, path = Path(execute).read_text().rstrip("\0").partition(" ")
-        await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
+
+        def cont() -> Iterator[str]:
+            for line in Path(execute).read_text().split("\0"):
+                _, _, path = line.partition(" ")
+                yield path
+
+        stdout.write(join(cont()))
 
     else:
         files = await _git_file_diff(older=older, newer=newer)
