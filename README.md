@@ -1,5 +1,5 @@
 # Some Devtools Written in Python
 
-```sh
+```bash
 pip3 install -U https://github.com/ms-jpq/py-dev/archive/dev.tar.gz
 ```
