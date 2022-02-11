@@ -1,16 +1,17 @@
-from argparse import ArgumentParser, Namespace
-from pathlib import Path, PurePath
+from argparse import ArgumentParser
+from pathlib import PurePath
 from posixpath import normcase
 from shlex import join
 from shutil import which
 from sys import stdout
-from typing import AsyncIterator, Iterable, Iterator
+from typing import AsyncIterator, Iterable
 
 from std2.asyncio.subprocess import call
+from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..spec_parse import spec_parse
+from ..spec_parse import SPEC, Mode, spec_parse
 
 
 async def _git_ls_files() -> AsyncIterator[PurePath]:
@@ -26,7 +27,7 @@ async def _git_ls_files() -> AsyncIterator[PurePath]:
 
 async def _fzf_lhs(paths: Iterable[PurePath]) -> None:
     stdin = "\0".join(map(normcase, paths)).encode()
-    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(stdin)
 
 
 async def _git_show_blame(path: PurePath) -> None:
@@ -49,32 +50,27 @@ async def _git_show_blame(path: PurePath) -> None:
         stdout.buffer.write(proc.out)
 
 
-def _parse_args() -> Namespace:
+def _parse_args() -> SPEC:
     parser = ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview")
-    group.add_argument("--execute")
     return spec_parse(parser)
 
 
 async def main() -> int:
-    args = _parse_args()
+    mode, lines, _ = _parse_args()
 
-    if preview := args.preview:
-        preview_path = Path(preview).read_text().rstrip("\0")
+    if mode is Mode.preview:
+        preview_path, *_ = lines
         await _git_show_blame(PurePath(preview_path))
 
-    elif execute := args.execute:
+    elif mode is Mode.execute:
+        stdout.write(join(lines))
 
-        def cont() -> Iterator[str]:
-            for path in Path(execute).read_text().split("\0"):
-                yield path
-
-        stdout.write(join(cont()))
-
-    else:
+    elif mode is Mode.normal:
         paths = [el async for el in _git_ls_files()]
         await _fzf_lhs(paths)
+
+    else:
+        never(mode)
 
     return 0
 

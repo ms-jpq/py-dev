@@ -1,19 +1,20 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from os import linesep
 from os.path import normcase
 from pathlib import Path, PurePath
 from shlex import join
 from tempfile import mkdtemp
-from typing import AsyncIterator, Iterable, Iterator, Tuple
+from typing import AsyncIterator, Iterable, Iterator, Sequence, Tuple
 
 from std2.asyncio.subprocess import call
 from std2.shutil import hr
+from std2.types import never
 
 from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_file
-from ..spec_parse import spec_parse
+from ..spec_parse import SPEC, Mode, spec_parse
 
 
 async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
@@ -39,7 +40,7 @@ async def _fzf_lhs(paths: Iterable[Tuple[str, str, PurePath]]) -> None:
         f"{sha}{linesep}{date}{linesep}{normcase(path)}" for sha, date, path in paths
     )
     stdin = "\0".join(lines).encode()
-    await run_fzf(stdin, p_args=("--preview={f}",), e_args=("--execute={+f}",))
+    await run_fzf(stdin)
 
 
 async def _fzf_rhs(sha: str, path: PurePath) -> None:
@@ -59,37 +60,36 @@ async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
         temp.parent.mkdir(parents=True, exist_ok=True)
         temp.write_bytes(proc.out)
 
-    line = "\t" + join(("cd", normcase(tmp)))
-    log.info("%s", hr(line))
+    log.info("%s", normcase(tmp))
 
 
-def _parse_args() -> Namespace:
+def _parse_args() -> SPEC:
     parser = ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview")
-    group.add_argument("--execute")
     return spec_parse(parser)
 
 
-async def main() -> int:
-    args = _parse_args()
+def _parse_lines(lines: Sequence[str]) -> Iterator[Tuple[str, PurePath]]:
+    for line in lines:
+        sha, _, path = line.splitlines()
+        yield sha, PurePath(path)
 
-    if preview := args.preview:
-        sha, _, path = Path(preview).read_text().rstrip("\0").split(linesep)
+
+async def main() -> int:
+    mode, lines, _ = _parse_args()
+
+    if mode is Mode.preview:
+        (sha, path), *_ = _parse_lines(lines)
         await _fzf_rhs(sha, path=PurePath(path))
 
-    elif execute := args.execute:
+    elif mode is Mode.execute:
+        await _git_show_many(_parse_lines(lines))
 
-        def cont() -> Iterator[Tuple[str, PurePath]]:
-            for line in Path(execute).read_text().rstrip("\0").split("\0"):
-                sha, _, path = line.split(linesep)
-                yield sha, PurePath(path)
-
-        await _git_show_many(cont())
-
-    else:
+    elif mode is Mode.normal:
         paths = [path async for path in _git_dead_files()]
         await _fzf_lhs(paths)
+
+    else:
+        never(mode)
 
     return 0
 

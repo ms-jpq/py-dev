@@ -1,16 +1,16 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from itertools import chain, repeat
-from pathlib import Path
 from shlex import join
 from sys import stdout
-from typing import Iterator
+from typing import Iterator, Sequence
 
 from std2.asyncio.subprocess import call
+from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_commit
-from ..spec_parse import spec_parse
+from ..spec_parse import SPEC, Mode, spec_parse
 
 
 async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
@@ -26,21 +26,9 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
     return proc.out.strip(b"\0")
 
 
-async def _fzf_lhs(unified: int, *search: str, commits: bytes) -> None:
-    await run_fzf(
-        commits,
-        p_args=(*search, f"--unified={unified}", "--preview={f}"),
-        e_args=(*search, f"--unified={unified}", "--execute={+f}"),
-    )
-
-
-def _parse_args() -> Namespace:
+def _parse_args() -> SPEC:
     parser = ArgumentParser()
     parser.add_argument("search", nargs="+")
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview")
-    group.add_argument("--execute")
 
     parser.add_argument("-r", "--regex", action="store_true")
     parser.add_argument("-u", "--unified", type=int, default=3)
@@ -48,25 +36,28 @@ def _parse_args() -> Namespace:
     return spec_parse(parser)
 
 
-async def main() -> int:
-    args = _parse_args()
+def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
+    for line in lines:
+        sha, _, _ = line.partition(" ")
+        yield sha
 
-    if preview := args.preview:
-        sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
+
+async def main() -> int:
+    mode, lines, args = _parse_args()
+
+    if mode is Mode.preview:
+        sha, *_ = _parse_lines(lines)
         await pretty_commit(args.unified, sha=sha)
 
-    elif execute := args.execute:
+    elif mode is Mode.execute:
+        stdout.write(join(_parse_lines(lines)))
 
-        def cont() -> Iterator[str]:
-            for line in Path(execute).read_text().split("\0"):
-                sha, _, _ = line.partition(" ")
-                yield sha
-
-        stdout.write(join(cont()))
+    elif mode is Mode.normal:
+        commits = await _ls_commits(args.regex, *args.search)
+        await run_fzf(commits)
 
     else:
-        commits = await _ls_commits(args.regex, *args.search)
-        await _fzf_lhs(args.unified, *args.search, commits=commits)
+        never(mode)
 
     return 0
 

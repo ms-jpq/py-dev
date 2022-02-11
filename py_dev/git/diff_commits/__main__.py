@@ -1,15 +1,16 @@
-from argparse import ArgumentParser, Namespace
-from pathlib import Path, PurePath
+from argparse import ArgumentParser
+from pathlib import PurePath
 from shlex import join
 from sys import stdout
-from typing import Iterator
+from typing import Iterator, Sequence
 
 from std2.asyncio.subprocess import call
+from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_diff
-from ..spec_parse import spec_parse
+from ..spec_parse import SPEC, Mode, spec_parse
 
 
 async def _git_file_diff(older: str, newer: str) -> bytes:
@@ -52,53 +53,44 @@ async def _git_diff_single(
     return proc.out
 
 
-async def _fzf_lhs(unified: int, older: str, newer: str, files: bytes) -> None:
-    await run_fzf(
-        files,
-        p_args=(older, newer, f"--unified={unified}", "--preview={f}"),
-        e_args=(older, newer, f"--unified={unified}", "--execute={+f}"),
-    )
-
-
 async def _fzf_rhs(unified: int, older: str, newer: str, path: PurePath) -> None:
     diff = await _git_diff_single(unified, older=older, newer=newer, path=path)
     await pretty_diff(diff, path=path)
 
 
-def _parse_args() -> Namespace:
+def _parse_args() -> SPEC:
     parser = ArgumentParser()
     parser.add_argument("older")
     parser.add_argument("newer", nargs="?", default="HEAD")
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview")
-    group.add_argument("--execute")
 
     parser.add_argument("-u", "--unified", type=int, default=3)
 
     return spec_parse(parser)
 
 
+def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
+    for line in lines:
+        _, _, path = line.partition(" ")
+        yield path
+
+
 async def main() -> int:
-    args = _parse_args()
+    mode, lines, args = _parse_args()
     older, newer = args.older, args.newer
 
-    if preview := args.preview:
-        _, _, path = Path(preview).read_text().rstrip("\0").partition(" ")
+    if mode is Mode.preview:
+        path, *_ = _parse_lines(lines)
         await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
 
-    elif execute := args.execute:
+    elif mode is Mode.execute:
+        stdout.write(join(_parse_lines(lines)))
 
-        def cont() -> Iterator[str]:
-            for line in Path(execute).read_text().split("\0"):
-                _, _, path = line.partition(" ")
-                yield path
-
-        stdout.write(join(cont()))
+    elif mode is Mode.normal:
+        files = await _git_file_diff(older=older, newer=newer)
+        await run_fzf(files)
 
     else:
-        files = await _git_file_diff(older=older, newer=newer)
-        await _fzf_lhs(args.unified, older=older, newer=newer, files=files)
+        never(mode)
 
     return 0
 

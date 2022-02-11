@@ -1,15 +1,15 @@
-from argparse import ArgumentParser, Namespace
-from pathlib import Path
+from argparse import ArgumentParser
 from shlex import join
 from sys import stdout
-from typing import AsyncIterator, Iterable, Iterator, Tuple
+from typing import AsyncIterator, Iterable, Iterator, Sequence, Tuple
 
 from std2.asyncio.subprocess import call
+from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
 from ..ops import pretty_commit
-from ..spec_parse import spec_parse
+from ..spec_parse import SPEC, Mode, spec_parse
 
 
 async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
@@ -25,45 +25,39 @@ async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
         yield sha, date
 
 
-async def _fzf_lhs(unified: int, commits: Iterable[Tuple[str, str]]) -> None:
+async def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
-    await run_fzf(
-        stdin,
-        p_args=(f"--unified={unified}", "--preview={f}"),
-        e_args=(f"--unified={unified}", "--execute={+f}"),
-    )
+    await run_fzf(stdin)
 
 
-def _parse_args() -> Namespace:
+def _parse_args() -> SPEC:
     parser = ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--preview")
-    group.add_argument("--execute")
-
     parser.add_argument("-u", "--unified", type=int, default=3)
-
     return spec_parse(parser)
 
 
-async def main() -> int:
-    args = _parse_args()
+def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
+    for line in lines:
+        sha, _, _ = line.partition(" ")
+        yield sha
 
-    if preview := args.preview:
-        sha, _, _ = Path(preview).read_text().rstrip("\0").partition(" ")
+
+async def main() -> int:
+    mode, lines, args = _parse_args()
+
+    if mode is Mode.preview:
+        sha, *_ = _parse_lines(lines)
         await pretty_commit(args.unified, sha=sha)
 
-    elif execute := args.execute:
+    elif mode is Mode.execute:
+        stdout.write(join(_parse_lines(lines)))
 
-        def cont() -> Iterator[str]:
-            for line in Path(execute).read_text().rstrip("\0").split("\0"):
-                sha, _, _ = line.partition(" ")
-                yield sha
-
-        stdout.write(join(cont()))
+    elif mode is Mode.normal:
+        commits = [el async for el in _git_ls_commits()]
+        await _fzf_lhs(commits)
 
     else:
-        commits = [el async for el in _git_ls_commits()]
-        await _fzf_lhs(args.unified, commits=commits)
+        never(mode)
 
     return 0
 
