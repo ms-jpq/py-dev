@@ -30,7 +30,7 @@ def main() -> int:
     if git := which(cmd):
         execle(git, normcase(git), *argv, env)
     else:
-        raise OSError(addn)
+        raise OSError(cmd)
 
 
 main()
