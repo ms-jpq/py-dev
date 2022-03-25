@@ -26,10 +26,11 @@ def main() -> int:
 
     env = {**environ, **addn}
 
-    if git := which("git"):
+    cmd = "git"
+    if git := which(cmd):
         execle(git, normcase(git), *argv, env)
     else:
-        raise OSError(args.cmd)
+        raise OSError(addn)
 
 
 main()
