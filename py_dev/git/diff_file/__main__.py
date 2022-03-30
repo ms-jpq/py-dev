@@ -25,7 +25,7 @@ async def _git_file_log(path: PurePath) -> bytes:
         path,
         capture_stderr=False,
     )
-    return proc.out.strip(b"\0")
+    return proc.stdout.strip(b"\0")
 
 
 async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
@@ -39,7 +39,7 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> bytes:
         path,
         capture_stderr=False,
     )
-    return proc.out
+    return proc.stdout
 
 
 async def _fzf_rhs(unified: int, sha: str, path: PurePath) -> None:

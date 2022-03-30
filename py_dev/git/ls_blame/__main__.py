@@ -21,7 +21,7 @@ async def _git_ls_files() -> AsyncIterator[PurePath]:
         "-z",
         capture_stderr=False,
     )
-    for path in proc.out.decode().strip("\0").split("\0"):
+    for path in proc.stdout.decode().strip("\0").split("\0"):
         yield PurePath(path)
 
 
@@ -42,12 +42,12 @@ async def _git_show_blame(path: PurePath) -> None:
     if delta := which("delta"):
         await call(
             delta,
-            stdin=proc.out,
+            stdin=proc.stdout,
             capture_stdout=False,
             capture_stderr=False,
         )
     else:
-        stdout.buffer.write(proc.out)
+        stdout.buffer.write(proc.stdout)
 
 
 def _parse_args() -> SPEC:

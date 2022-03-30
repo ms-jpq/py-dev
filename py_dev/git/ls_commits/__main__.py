@@ -20,7 +20,7 @@ async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         capture_stderr=False,
     )
-    for commit in proc.out.decode().strip("\0").split("\0"):
+    for commit in proc.stdout.decode().strip("\0").split("\0"):
         sha, _, date = commit.partition(" ")
         yield sha, date
 

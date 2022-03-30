@@ -25,7 +25,7 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
     )
 
     def cont() -> Iterator[bytes]:
-        it = iter(proc.out.rstrip(b"\0").split(b"\0"))
+        it = iter(proc.stdout.rstrip(b"\0").split(b"\0"))
         while True:
             if status := next(it, None):
                 if status[:1] == b"R":
@@ -50,7 +50,7 @@ async def _git_diff_single(
         path,
         capture_stderr=False,
     )
-    return proc.out
+    return proc.stdout
 
 
 async def _fzf_rhs(unified: int, older: str, newer: str, path: PurePath) -> None:

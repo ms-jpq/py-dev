@@ -35,7 +35,7 @@ async def _render(work_dir: Path, program: str) -> Optional[PurePath]:
         check_returncode=set(),
     )
 
-    if proc_1.code:
+    if proc_1.returncode:
         return None
     else:
         title = f"[{program.upper()}]"
@@ -44,13 +44,13 @@ async def _render(work_dir: Path, program: str) -> Optional[PurePath]:
             "-compress",
             "-title",
             title,
-            stdin=proc_1.out,
+            stdin=proc_1.stdout,
             capture_stdout=True,
             capture_stderr=False,
         )
 
         html = work_dir / f"{program}.html"
-        html.write_bytes(proc_2.out)
+        html.write_bytes(proc_2.stdout)
         return html.relative_to(work_dir)
 
 

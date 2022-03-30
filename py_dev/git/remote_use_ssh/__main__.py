@@ -11,43 +11,19 @@ from ...run import run_main
 
 
 async def _git_uri() -> Tuple[str, str]:
-    proc = await call(
-        "git",
-        "rev-parse",
-        "--abbrev-ref",
-        "--symbolic-full-name",
-        "@{upstream}",
-        capture_stderr=False,
-    )
-    remote, _, _ = proc.out.decode().strip().partition("/")
-    proc = await call(
-        "git",
-        "remote",
-        "get-url",
-        remote,
-        capture_stderr=False,
-    )
-    uri = proc.out.decode().strip()
+    proc = await call("git", "remote", capture_stderr=False)
+    remote = proc.stdout.decode().rstrip()
+    proc = await call("git", "remote", "get-url", remote, capture_stderr=False)
+    uri = proc.stdout.decode().strip()
     return remote, uri
 
 
 async def _set_uri(remote: str, uri: str) -> None:
     await call(
-        "git",
-        "remote",
-        "rm",
-        remote,
-        capture_stderr=False,
-        capture_stdout=False,
+        "git", "remote", "rm", remote, capture_stderr=False, capture_stdout=False
     )
     await call(
-        "git",
-        "remote",
-        "add",
-        remote,
-        uri,
-        capture_stderr=False,
-        capture_stdout=False,
+        "git", "remote", "add", remote, uri, capture_stderr=False, capture_stdout=False
     )
 
 

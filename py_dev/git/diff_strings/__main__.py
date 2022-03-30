@@ -23,7 +23,7 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
         *chain.from_iterable(zip(repeat("-G"), chain((search,), searches))),
         capture_stderr=False,
     )
-    return proc.out.strip(b"\0")
+    return proc.stdout.strip(b"\0")
 
 
 def _parse_args() -> SPEC:

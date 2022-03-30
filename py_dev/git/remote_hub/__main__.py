@@ -19,7 +19,7 @@ async def _git_uri() -> Tuple[str, str]:
         "@{upstream}",
         capture_stderr=False,
     )
-    remote, _, branch = proc.out.decode().strip().partition("/")
+    remote, _, branch = proc.stdout.decode().strip().partition("/")
     proc = await call(
         "git",
         "remote",
@@ -28,7 +28,7 @@ async def _git_uri() -> Tuple[str, str]:
         remote,
         capture_stderr=False,
     )
-    uri = proc.out.decode().strip()
+    uri = proc.stdout.decode().strip()
     return branch, uri
 
 

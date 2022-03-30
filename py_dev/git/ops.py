@@ -39,7 +39,7 @@ async def pretty_file(sha: str, path: PurePath) -> None:
         f"{sha}:{path}",
         capture_stderr=False,
     )
-    await pprn(proc.out, path=path)
+    await pprn(proc.stdout, path=path)
 
 
 async def pretty_diff(diff: bytes, path: Optional[PurePath]) -> None:
@@ -88,4 +88,4 @@ async def pretty_commit(unified: int, sha: str) -> None:
 
     stdout.writelines((linesep, hr(), linesep))
     stdout.flush()
-    await pretty_diff(proc.out, path=None)
+    await pretty_diff(proc.stdout, path=None)

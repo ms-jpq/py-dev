@@ -27,7 +27,7 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         capture_stderr=False,
     )
-    for commit in proc.out.decode().strip("\0").split("\0"):
+    for commit in proc.stdout.decode().strip("\0").split("\0"):
         meta, *paths = commit.split(linesep)
         sha, _, date = meta.partition(" ")
         for path in paths:
@@ -58,7 +58,7 @@ async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
             capture_stderr=False,
         )
         temp.parent.mkdir(parents=True, exist_ok=True)
-        temp.write_bytes(proc.out)
+        temp.write_bytes(proc.stdout)
 
     log.info("%s", normcase(tmp))
 

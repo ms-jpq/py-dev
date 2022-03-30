@@ -45,11 +45,11 @@ async def envsubst() -> None:
             ),
         )
 
-        gitweb_src = Path(p2.out.decode()).parent / "gitweb"
-        top_level = Path(p3.out.decode().rstrip())
+        gitweb_src = Path(p2.stdout.decode()).parent / "gitweb"
+        top_level = Path(p3.stdout.decode().rstrip())
         title = "".join(char if char in ascii else "-" for char in top_level.name)
 
-        git_dir = top_level / p4.out.decode().rstrip()
+        git_dir = top_level / p4.stdout.decode().rstrip()
         gitweb_dst = git_dir / "gitweb"
 
         cwd = gitweb_dst / "python"
@@ -71,7 +71,7 @@ async def envsubst() -> None:
         script.write_text(perl)
 
         env = {
-            "GIT_EXEC_PATH": normcase(p1.out.decode()),
+            "GIT_EXEC_PATH": normcase(p1.stdout.decode()),
             "GITWEB_CONFIG": normcase(script),
             "GIT_DIR": normcase(git_dir),
         }
