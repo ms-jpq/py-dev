@@ -4,17 +4,17 @@ from os.path import normcase
 from pathlib import Path, PurePath
 from shlex import join
 from shutil import which
-from typing import Sequence, Tuple
 
 
-def _parse_args() -> Tuple[Namespace, Sequence[str]]:
+def _parse_args() -> Namespace:
     parser = ArgumentParser(add_help=False)
     parser.add_argument("path", type=PurePath)
-    return parser.parse_known_args()
+    parser.add_argument("argv", nargs="...")
+    return parser.parse_args()
 
 
 def main() -> int:
-    args, argv = _parse_args()
+    args = _parse_args()
     path = PurePath(args.path)
 
     if path == PurePath("-"):
@@ -28,7 +28,7 @@ def main() -> int:
 
     cmd = "git"
     if git := which(cmd):
-        execle(git, normcase(git), *argv, env)
+        execle(git, normcase(git), *args.argv, env)
     else:
         raise OSError(cmd)
 

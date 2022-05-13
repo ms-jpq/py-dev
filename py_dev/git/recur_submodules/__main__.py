@@ -1,21 +1,20 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import PurePath
-from typing import Sequence, Tuple
 
 from std2.asyncio.subprocess import call
 
 from ...run import run_main
 
 
-def _parse_args() -> Tuple[Namespace, Sequence[str]]:
+def _parse_args() -> Namespace:
     parser = ArgumentParser(add_help=False)
     parser.add_argument("cmd", type=PurePath)
-    return parser.parse_known_args()
+    return parser.parse_args()
 
 
 async def main() -> int:
-    args, argv = _parse_args()
-    r_args = (args.cmd, *argv)
+    args = _parse_args()
+    r_args = (args.cmd, *args.argv)
 
     await call(
         *r_args,
