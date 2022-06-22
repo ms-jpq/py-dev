@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+
+from py_dev.git.show_commit import __main__
