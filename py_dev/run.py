@@ -1,9 +1,9 @@
 from asyncio import run
 from sys import exit
-from typing import Awaitable, NoReturn
+from typing import Any, Coroutine, NoReturn
 
 
-def run_main(main: Awaitable[int]) -> NoReturn:
+def run_main(main: Coroutine[Any, Any, int]) -> NoReturn:
     try:
         code = run(main)
     except BrokenPipeError:
