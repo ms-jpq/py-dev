@@ -1,0 +1,28 @@
+[project]
+dependencies = [
+  "std2@https://github.com/ms-jpq/std2/archive/963cf22346620926c0bd64f628ff4d8141123db5.tar.gz",
+  "Pygments",
+  "Jinja2",
+]
+name = "py_dev"
+requires-python = ">=3.8.0"
+version = "0.1.69"
+
+[project.scripts]
+ccat        = "py_dev.ccat.__main__:main"
+git-diff-c  = "py_dev.git.diff_commits.__main__:main"
+git-diff-f  = "py_dev.git.diff_file.__main__:main"
+git-diff-s  = "py_dev.git.diff_strings.__main__:main"
+git-hub     = "py_dev.git.remote_hub.__main__:main"
+git-ls-b    = "py_dev.git.ls_blame.__main__:main"
+git-ls-c    = "py_dev.git.ls_commits.__main__:main"
+git-ls-d    = "py_dev.git.ls_dead.__main__:main"
+git-pr      = "py_dev.git.pull_request.__main__:main"
+git-recur   = "py_dev.git.recur_submodules.__main__:main"
+git-show-c  = "py_dev.git.show_commit.__main__:main"
+git-ssh     = "py_dev.git.ssh.__main__:main"
+git-use-ssh = "py_dev.git.remote_use_ssh.__main__:main"
+git-web     = "py_dev.git.web.__main__:main"
+http-echo   = "py_dev.http_echo.__main__:main"
+srv         = "py_dev.srv.__main__:main"
+woman       = "py_dev.man.__main__:main"

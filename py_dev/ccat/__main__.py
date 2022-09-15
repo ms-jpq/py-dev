@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path, PurePath
 from sys import stdin, stdout
+from typing import NoReturn
 
 from pygments.formatters._mapping import FORMATTERS
 from pygments.styles import get_all_styles
@@ -29,7 +30,7 @@ def _arg_parse() -> Namespace:
     return args
 
 
-async def main() -> int:
+async def _main() -> int:
     args = _arg_parse()
     text = stdin.read() if args.stdin or not args.name else Path(args.name).read_text()
     pretty = pprn(
@@ -39,4 +40,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

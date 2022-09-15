@@ -4,7 +4,7 @@ from os.path import normcase
 from pathlib import PurePath
 from shlex import join
 from sys import stdout
-from typing import Iterator, Sequence
+from typing import Iterator, NoReturn, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -65,7 +65,7 @@ def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
         yield sha
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, args = _parse_args()
 
     if mode is Mode.preview:
@@ -85,4 +85,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

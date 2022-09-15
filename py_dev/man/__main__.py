@@ -3,7 +3,7 @@ from asyncio.tasks import gather
 from os.path import normcase
 from pathlib import Path, PurePath
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import NoReturn, Optional
 from urllib.parse import quote
 from webbrowser import open as w_open
 
@@ -54,7 +54,7 @@ async def _render(work_dir: Path, program: str) -> Optional[PurePath]:
         return html.relative_to(work_dir)
 
 
-async def main() -> int:
+async def _main() -> int:
     args = _parse_args()
     assert args.programs
 
@@ -83,4 +83,5 @@ async def main() -> int:
             return 1
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

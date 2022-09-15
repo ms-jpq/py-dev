@@ -1,3 +1,0 @@
-std2@https://github.com/ms-jpq/std2/archive/149059bb83202d2b53221c0bc088d33d9c273cf9.tar.gz
-Pygments
-Jinja2

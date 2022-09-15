@@ -1,6 +1,7 @@
 from asyncio import gather
+from functools import lru_cache
 from os import environ, linesep
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from shlex import split
 from shutil import which
 from sys import stdout
@@ -32,11 +33,21 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
         stdout.write(pretty)
 
 
+@lru_cache(maxsize=None)
+async def git_root() -> PurePath:
+    proc = await call("git", "rev-parse", "--show-toplevel", capture_stderr=False)
+    return PurePath(proc.stdout.rstrip().decode("utf-8"))
+
+
 async def pretty_file(sha: str, path: PurePath) -> None:
+    root = await git_root()
+    abs = Path.cwd() / path
+    rel = abs.relative_to(root)
     proc = await call(
         "git",
         "show",
-        f"{sha}:{path}",
+        "--relative",
+        f"{sha}:{rel}",
         capture_stderr=False,
     )
     await pprn(proc.stdout, path=path)
@@ -70,6 +81,7 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "--max-count=1",
         "--color",
         "--name-status",
+        "--relative",
         sha,
         capture_stdout=False,
         capture_stderr=False,
@@ -78,6 +90,7 @@ async def pretty_commit(unified: int, sha: str) -> None:
         "git",
         "show",
         "--submodule",
+        "--relative",
         f"--unified={unified}",
         "--pretty=format:",
         sha,

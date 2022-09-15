@@ -26,10 +26,23 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Pip Packages
-        run: pip install -U mypy
+        run: pip install -U -- mypy toml
 
       - name: Pip Packages 2
-        run: pip install -U -r requirements.txt
+        shell: python
+        run: |-
+          from os import execl
+          from pathlib import Path
+          from sys import executable
+          from toml import loads
+          path = Path.cwd() / "pyproject.toml"
+          toml = loads(path.read_text())
+          deps = toml["project"]["dependencies"]
+          execl(executable, executable, "-m", "pip", "install", "--", *deps)
+
 
       - name: Lint
         run: mypy -- .
+
+      - name: Install
+        run: pip3 install -- .

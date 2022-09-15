@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from itertools import chain, repeat
 from shlex import join
 from sys import stdout
-from typing import Iterator, Sequence
+from typing import Iterator, NoReturn, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -17,6 +17,7 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
     proc = await call(
         "git",
         "log",
+        "--relative",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
         *(() if regex else ("--fixed-strings",)),
@@ -42,7 +43,7 @@ def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
         yield sha
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, args = _parse_args()
 
     if mode is Mode.preview:
@@ -62,4 +63,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

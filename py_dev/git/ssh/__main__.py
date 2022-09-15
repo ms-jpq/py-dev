@@ -4,6 +4,9 @@ from os.path import normcase
 from pathlib import Path, PurePath
 from shlex import join
 from shutil import which
+from typing import NoReturn
+
+from ...run import run_main
 
 
 def _parse_args() -> Namespace:
@@ -13,7 +16,7 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
+async def _main() -> int:
     args = _parse_args()
     path = PurePath(args.path)
 
@@ -33,4 +36,5 @@ def main() -> int:
         raise OSError(cmd)
 
 
-main()
+def main() -> NoReturn:
+    run_main(_main())

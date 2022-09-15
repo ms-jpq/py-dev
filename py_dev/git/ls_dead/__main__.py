@@ -2,18 +2,15 @@ from argparse import ArgumentParser
 from os import linesep
 from os.path import normcase
 from pathlib import Path, PurePath
-from shlex import join
 from tempfile import mkdtemp
-from typing import AsyncIterator, Iterable, Iterator, Sequence, Tuple
+from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence, Tuple
 
 from std2.asyncio.subprocess import call
-from std2.shutil import hr
 from std2.types import never
 
-from ...log import log
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_file
+from ..ops import git_root, pretty_file
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
@@ -23,6 +20,7 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
         "log",
         "--diff-filter=D",
         "--name-only",
+        "--relative",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
         capture_stderr=False,
@@ -48,19 +46,24 @@ async def _fzf_rhs(sha: str, path: PurePath) -> None:
 
 
 async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
+    root = await git_root()
+    cwd = Path.cwd()
     tmp = Path(mkdtemp())
     for sha, path in it:
         temp = tmp / path
+        abs = cwd / path
+        rel = abs.relative_to(root)
         proc = await call(
             "git",
             "show",
-            f"{sha}:{path}",
+            "--relative",
+            f"{sha}:{rel}",
             capture_stderr=False,
         )
         temp.parent.mkdir(parents=True, exist_ok=True)
         temp.write_bytes(proc.stdout)
 
-    log.info("%s", normcase(tmp))
+    print(normcase(tmp))
 
 
 def _parse_args() -> SPEC:
@@ -74,7 +77,7 @@ def _parse_lines(lines: Sequence[str]) -> Iterator[Tuple[str, PurePath]]:
         yield sha, PurePath(path)
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, _ = _parse_args()
 
     if mode is Mode.preview:
@@ -94,4 +97,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

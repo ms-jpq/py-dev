@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import NoReturn, Tuple
 from urllib.parse import quote, urlsplit
 from webbrowser import open as open_w
 
@@ -45,7 +45,7 @@ def _p_uri(uri: str, branch: str) -> str:
         raise ValueError(f"Cannot parse {uri} into https://...")
 
 
-async def main() -> int:
+async def _main() -> int:
     branch, uri = await _git_uri()
     clean_uri = _p_uri(uri, branch=branch)
     open_w(clean_uri)
@@ -53,4 +53,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

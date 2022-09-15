@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from typing import NoReturn
 from webbrowser import open as w_open
 
 from std2.shutil import hr
@@ -16,7 +17,7 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-async def main() -> int:
+async def _main() -> int:
     args = _parse_args()
     await envsubst()
 
@@ -32,4 +33,5 @@ async def main() -> int:
         return 1
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

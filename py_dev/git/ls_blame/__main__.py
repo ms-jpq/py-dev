@@ -4,7 +4,7 @@ from posixpath import normcase
 from shlex import join
 from shutil import which
 from sys import stdout
-from typing import AsyncIterator, Iterable
+from typing import AsyncIterator, Iterable, NoReturn
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -18,6 +18,7 @@ async def _git_ls_files() -> AsyncIterator[PurePath]:
     proc = await call(
         "git",
         "ls-files",
+        "--recurse-submodules",
         "-z",
         capture_stderr=False,
     )
@@ -55,7 +56,7 @@ def _parse_args() -> SPEC:
     return spec_parse(parser)
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, _ = _parse_args()
 
     if mode is Mode.preview:
@@ -75,4 +76,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

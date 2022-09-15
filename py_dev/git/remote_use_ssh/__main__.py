@@ -1,6 +1,6 @@
 from os import altsep, sep
 from pathlib import PurePosixPath
-from typing import Tuple
+from typing import NoReturn, Tuple
 from urllib.parse import urlsplit
 
 from std2.asyncio.subprocess import call
@@ -27,7 +27,7 @@ async def _set_uri(remote: str, uri: str) -> None:
     )
 
 
-async def main() -> int:
+async def _main() -> int:
     remote, uri = await _git_uri()
     parsed = urlsplit(uri)
 
@@ -45,4 +45,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

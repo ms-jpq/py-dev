@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import PurePath
 from shlex import join
 from sys import stdout
+from typing import NoReturn
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -17,6 +18,7 @@ async def _git_commit_files(commit: str) -> bytes:
         "git",
         "show",
         "--name-only",
+        "--relative",
         "--pretty=format:",
         "-z",
         commit,
@@ -29,6 +31,7 @@ async def _fzf_rhs(commit: str, path: PurePath) -> None:
     proc = await call(
         "git",
         "show",
+        "--relative",
         commit,
         "--",
         path,
@@ -45,7 +48,7 @@ def _parse_args() -> SPEC:
     return spec_parse(parser)
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, args = _parse_args()
 
     if mode is Mode.preview:
@@ -65,4 +68,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())

@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from pathlib import PurePath
 from shlex import join
 from sys import stdout
-from typing import Iterator, Sequence
+from typing import Iterator, NoReturn, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -18,6 +18,7 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
         "git",
         "diff",
         "--name-status",
+        "--relative",
         "-z",
         older,
         newer,
@@ -74,7 +75,7 @@ def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
         yield path
 
 
-async def main() -> int:
+async def _main() -> int:
     mode, lines, args = _parse_args()
     older, newer = args.older, args.newer
 
@@ -95,4 +96,5 @@ async def main() -> int:
     return 0
 
 
-run_main(main())
+def main() -> NoReturn:
+    run_main(_main())
