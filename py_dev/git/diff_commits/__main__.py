@@ -13,15 +13,14 @@ from ..ops import pretty_diff
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-async def _git_file_diff(older: str, newer: str) -> bytes:
+async def _git_file_diff(argv: Sequence[str]) -> bytes:
     proc = await call(
         "git",
         "diff",
         "--name-status",
         "--relative",
         "-z",
-        older,
-        newer,
+        *argv,
         capture_stderr=False,
     )
 
@@ -38,15 +37,12 @@ async def _git_file_diff(older: str, newer: str) -> bytes:
     return b"\0".join(cont())
 
 
-async def _git_diff_single(
-    unified: int, older: str, newer: str, path: PurePath
-) -> bytes:
+async def _git_diff_single(unified: int, path: PurePath, argv: Sequence[str]) -> bytes:
     proc = await call(
         "git",
         "diff",
         f"--unified={unified}",
-        older,
-        newer,
+        *argv,
         "--",
         path,
         capture_stderr=False,
@@ -54,18 +50,16 @@ async def _git_diff_single(
     return proc.stdout
 
 
-async def _fzf_rhs(unified: int, older: str, newer: str, path: PurePath) -> None:
-    diff = await _git_diff_single(unified, older=older, newer=newer, path=path)
+async def _fzf_rhs(unified: int, argv: Sequence[str], path: PurePath) -> None:
+    diff = await _git_diff_single(unified, path=path, argv=argv)
     await pretty_diff(diff, path=path)
 
 
 def _parse_args() -> SPEC:
     parser = ArgumentParser()
-    parser.add_argument("older")
-    parser.add_argument("newer", nargs="?", default="HEAD")
-
     parser.add_argument("-u", "--unified", type=int, default=3)
-
+    parser.add_argument("lhs")
+    parser.add_argument("rhs", nargs="...", default=())
     return spec_parse(parser)
 
 
@@ -77,17 +71,17 @@ def _parse_lines(lines: Sequence[str]) -> Iterator[str]:
 
 async def _main() -> int:
     mode, lines, args = _parse_args()
-    older, newer = args.older, args.newer
+    argv = (args.lhs, *args.rhs)
 
     if mode is Mode.preview:
         path, *_ = _parse_lines(lines)
-        await _fzf_rhs(args.unified, older=older, newer=newer, path=PurePath(path))
+        await _fzf_rhs(args.unified, path=PurePath(path), argv=argv)
 
     elif mode is Mode.execute:
         stdout.write(join(_parse_lines(lines)))
 
     elif mode is Mode.normal:
-        files = await _git_file_diff(older=older, newer=newer)
+        files = await _git_file_diff(argv)
         await run_fzf(files)
 
     else:
