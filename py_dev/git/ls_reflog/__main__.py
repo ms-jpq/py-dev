@@ -9,8 +9,10 @@ from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import pretty_commit, pretty_diff, pretty_file
+from ..ops import pretty_commit, pretty_diff, pretty_file, print_argv
 from ..spec_parse import SPEC, Mode, spec_parse
+
+_RE = compile(r"HEAD@\{(\d+)\}")
 
 
 async def _git_reflog(
@@ -21,6 +23,7 @@ async def _git_reflog(
         "log",
         "--walk-reflogs",
         "--color",
+        "--remove-empty",
         "--pretty=format:%x00%Cgreen%gD%Creset %Cblue%ad%Creset %s",
         *(("--perl-regexp",) if regex else ("--fixed-strings",)),
         *chain.from_iterable(zip(repeat("--grep-reflog"), search)),
@@ -36,8 +39,7 @@ async def _fzf_lhs(reflog: bytes) -> None:
 
 
 async def _git_show_diff(unified: int, ref: str, path: PurePath) -> None:
-    re = compile(r"HEAD@\{(\d+)\}")
-    m = re.match(ref)
+    m = _RE.match(ref)
     assert m
     cur = int(m.group(1))
     proc = await call(
@@ -72,7 +74,7 @@ def _parse_args() -> SPEC:
     parser.add_argument("-p", "--path", type=PurePath)
 
     parser.add_argument("-r", "--regex", action="store_true")
-    parser.add_argument("search",  nargs="*", default=())
+    parser.add_argument("search", nargs="*", default=())
 
     return spec_parse(parser)
 
@@ -88,7 +90,10 @@ async def _main() -> int:
     elif mode is Mode.execute:
         line, *_ = lines
         ref, *_ = line.split()
-        print(ref)
+        m = _RE.match(ref)
+        assert m
+        pos = int(m.group(1)) + 1
+        print_argv(f"HEAD@{{{pos}}}")
 
     elif mode is Mode.normal:
         reflog = await _git_reflog(args.regex, path=args.path, search=args.search)

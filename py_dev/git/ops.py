@@ -2,7 +2,7 @@ from asyncio import gather
 from functools import lru_cache
 from os import environ, linesep
 from pathlib import Path, PurePath
-from shlex import split
+from shlex import join, split
 from shutil import which
 from sys import stdout
 from tempfile import NamedTemporaryFile
@@ -12,6 +12,11 @@ from std2.asyncio.subprocess import call
 from std2.shutil import hr
 
 from ..ccat.pprn import pprn_basic
+
+
+def print_argv(*args: str) -> None:
+    stdout.write(join(args))
+    stdout.write(linesep)
 
 
 async def pprn(content: bytes, path: Optional[PurePath]) -> None:

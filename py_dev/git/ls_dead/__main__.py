@@ -10,7 +10,7 @@ from std2.types import never
 
 from ...run import run_main
 from ..fzf import run_fzf
-from ..ops import git_root, pretty_file
+from ..ops import git_root, pretty_file, print_argv
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
@@ -64,7 +64,7 @@ async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
         temp.parent.mkdir(parents=True, exist_ok=True)
         temp.write_bytes(proc.stdout)
 
-    print(normcase(tmp))
+    print_argv(normcase(tmp))
 
 
 def _parse_args() -> SPEC:
