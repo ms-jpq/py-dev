@@ -23,6 +23,7 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
         "--relative",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset",
+        "--",
         capture_stderr=False,
     )
     for commit in proc.stdout.decode().strip("\0").split("\0"):

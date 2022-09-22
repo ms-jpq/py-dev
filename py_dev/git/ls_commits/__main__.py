@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from pathlib import PurePath
 from shlex import join
 from sys import stdout
 from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence, Tuple
@@ -12,12 +13,14 @@ from ..ops import pretty_commit
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-async def _git_ls_commits() -> AsyncIterator[Tuple[str, str]]:
+async def _git_ls_commits(paths: Sequence[PurePath]) -> AsyncIterator[Tuple[str, str]]:
     proc = await call(
         "git",
         "log",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
+        "--",
+        *paths,
         capture_stderr=False,
     )
     for commit in proc.stdout.decode().strip("\0").split("\0"):
@@ -33,6 +36,7 @@ async def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
 def _parse_args() -> SPEC:
     parser = ArgumentParser()
     parser.add_argument("-u", "--unified", type=int, default=3)
+    parser.add_argument("paths", nargs="*", type=PurePath)
     return spec_parse(parser)
 
 
@@ -53,7 +57,7 @@ async def _main() -> int:
         stdout.write(join(_parse_lines(lines)))
 
     elif mode is Mode.normal:
-        commits = [el async for el in _git_ls_commits()]
+        commits = [el async for el in _git_ls_commits(args.paths)]
         await _fzf_lhs(commits)
 
     else:

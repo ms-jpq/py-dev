@@ -30,9 +30,9 @@ async def _fzf_lhs(reflog: bytes) -> None:
     await run_fzf(reflog)
 
 
-async def _git_show_diff(unified: int, sha: str, path: PurePath) -> None:
+async def _git_show_diff(unified: int, ref: str, path: PurePath) -> None:
     re = compile(r"HEAD@\{(\d+)\}")
-    m = re.match(sha)
+    m = re.match(ref)
     assert m
     cur = int(m.group(1))
     proc = await call(
@@ -49,15 +49,15 @@ async def _git_show_diff(unified: int, sha: str, path: PurePath) -> None:
 
 
 async def _fzf_rhs(
-    diff: bool, unified: int, sha: str, path: Optional[PurePath]
+    diff: bool, unified: int, ref: str, path: Optional[PurePath]
 ) -> None:
     if path:
         if diff:
-            await _git_show_diff(unified, sha=sha, path=path)
+            await _git_show_diff(unified, ref=ref, path=path)
         else:
-            await pretty_file(sha, path)
+            await pretty_file(ref, path=path)
     else:
-        await pretty_commit(unified, sha=sha)
+        await pretty_commit(unified, sha=ref)
 
 
 def _parse_args() -> SPEC:
@@ -73,13 +73,13 @@ async def _main() -> int:
 
     if mode is Mode.preview:
         line, *_ = lines
-        sha, *_ = line.split()
-        await _fzf_rhs(diff=args.diff, unified=args.unified, sha=sha, path=args.path)
+        ref, *_ = line.split()
+        await _fzf_rhs(diff=args.diff, unified=args.unified, ref=ref, path=args.path)
 
     elif mode is Mode.execute:
         line, *_ = lines
-        sha, *_ = line.split()
-        print(sha)
+        ref, *_ = line.split()
+        print(ref)
 
     elif mode is Mode.normal:
         reflog = await _git_reflog(args.path)
