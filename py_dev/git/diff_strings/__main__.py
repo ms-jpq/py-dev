@@ -20,7 +20,7 @@ async def _ls_commits(regex: bool, search: str, *searches: str) -> bytes:
         "--relative",
         "--color",
         "--pretty=format:%x00%Cgreen%h%Creset %Cblue%ad%Creset %s",
-        *(() if regex else ("--fixed-strings",)),
+        *(("--perl-regexp",) if regex else ("--fixed-strings",)),
         *chain.from_iterable(zip(repeat("--grep"), chain((search,), searches))),
         capture_stderr=False,
     )

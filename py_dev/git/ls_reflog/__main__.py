@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
+from itertools import chain, repeat
 from pathlib import PurePath
 from re import compile
-from typing import NoReturn, Optional
+from typing import NoReturn, Optional, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -12,13 +13,17 @@ from ..ops import pretty_commit, pretty_diff, pretty_file
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-async def _git_reflog(path: Optional[PurePath]) -> bytes:
+async def _git_reflog(
+    regex: bool, path: Optional[PurePath], search: Sequence[str]
+) -> bytes:
     proc = await call(
         "git",
         "log",
         "--walk-reflogs",
         "--color",
         "--pretty=format:%x00%Cgreen%gD%Creset %Cblue%ad%Creset %s",
+        *(("--perl-regexp",) if regex else ("--fixed-strings",)),
+        *chain.from_iterable(zip(repeat("--grep-reflog"), search)),
         "--",
         *((path,) if path else ()),
         capture_stderr=False,
@@ -62,9 +67,13 @@ async def _fzf_rhs(
 
 def _parse_args() -> SPEC:
     parser = ArgumentParser()
-    parser.add_argument("path", nargs="?", type=PurePath)
     parser.add_argument("-d", "--diff", action="store_true")
     parser.add_argument("-u", "--unified", type=int, default=3)
+    parser.add_argument("-p", "--path", type=PurePath)
+
+    parser.add_argument("-r", "--regex", action="store_true")
+    parser.add_argument("search",  nargs="*", default=())
+
     return spec_parse(parser)
 
 
@@ -82,7 +91,7 @@ async def _main() -> int:
         print(ref)
 
     elif mode is Mode.normal:
-        reflog = await _git_reflog(args.path)
+        reflog = await _git_reflog(args.regex, path=args.path, search=args.search)
         await _fzf_lhs(reflog)
 
     else:
