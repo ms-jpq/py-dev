@@ -13,10 +13,11 @@ from ..ops import pretty_commit, pretty_diff, pretty_file, print_argv
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-def _ref(ref: str) -> int:
-    m = compile(r"HEAD@\{(\d+)\}").match(ref)
+def _ref(ref: str) -> tuple[str, int]:
+    m = compile(r"([^@]+)@\{(\d+)\}$").match(ref)
     assert m
-    return int(m.group(1))
+    refname, pos = m.group(1, 2)
+    return refname, int(pos)
 
 
 async def _git_reflog(
@@ -43,13 +44,13 @@ async def _fzf_lhs(reflog: bytes) -> None:
 
 
 async def _git_show_diff(unified: int, ref: str, path: PurePath) -> None:
-    cur = _ref(ref)
+    re, cur = _ref(ref)
     proc = await call(
         "git",
         "diff",
         f"--unified={unified}",
-        f"HEAD@{{{cur}}}",
-        f"HEAD@{{{cur + 1}}}",
+        f"{re}@{{{cur}}}",
+        f"{re}@{{{cur + 1}}}",
         "--",
         path,
         capture_stderr=False,
@@ -92,8 +93,8 @@ async def _main() -> int:
     elif mode is Mode.execute:
         line, *_ = lines
         ref, *_ = line.split()
-        pos = _ref(ref) + 1
-        print_argv(f"HEAD@{{{pos}}}")
+        re, pos = _ref(ref)
+        print_argv(f"{re}@{{{pos + 1}}}")
 
     elif mode is Mode.normal:
         reflog = await _git_reflog(args.regex, path=args.path, search=args.search)

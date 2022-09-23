@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from pathlib import PurePath
 from shlex import join
 from sys import stdout
-from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence, Tuple
+from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -13,7 +13,7 @@ from ..ops import pretty_commit
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-async def _git_ls_commits(paths: Sequence[PurePath]) -> AsyncIterator[Tuple[str, str]]:
+async def _git_ls_commits(paths: Sequence[PurePath]) -> AsyncIterator[tuple[str, str]]:
     proc = await call(
         "git",
         "log",
@@ -28,7 +28,7 @@ async def _git_ls_commits(paths: Sequence[PurePath]) -> AsyncIterator[Tuple[str,
         yield sha, date
 
 
-async def _fzf_lhs(commits: Iterable[Tuple[str, str]]) -> None:
+async def _fzf_lhs(commits: Iterable[tuple[str, str]]) -> None:
     stdin = "\0".join(f"{sha} {date}" for sha, date in commits).encode()
     await run_fzf(stdin)
 

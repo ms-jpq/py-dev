@@ -3,7 +3,7 @@ from os import linesep
 from os.path import normcase
 from pathlib import Path, PurePath
 from tempfile import mkdtemp
-from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence, Tuple
+from typing import AsyncIterator, Iterable, Iterator, NoReturn, Sequence
 
 from std2.asyncio.subprocess import call
 from std2.types import never
@@ -14,7 +14,7 @@ from ..ops import git_root, pretty_file, print_argv
 from ..spec_parse import SPEC, Mode, spec_parse
 
 
-async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
+async def _git_dead_files() -> AsyncIterator[tuple[str, str, PurePath]]:
     proc = await call(
         "git",
         "log",
@@ -34,7 +34,7 @@ async def _git_dead_files() -> AsyncIterator[Tuple[str, str, PurePath]]:
                 yield f"{sha}~", date, PurePath(path)
 
 
-async def _fzf_lhs(paths: Iterable[Tuple[str, str, PurePath]]) -> None:
+async def _fzf_lhs(paths: Iterable[tuple[str, str, PurePath]]) -> None:
     lines = (
         f"{sha}{linesep}{date}{linesep}{normcase(path)}" for sha, date, path in paths
     )
@@ -46,7 +46,7 @@ async def _fzf_rhs(sha: str, path: PurePath) -> None:
     await pretty_file(sha, path)
 
 
-async def _git_show_many(it: Iterable[Tuple[str, PurePath]]) -> None:
+async def _git_show_many(it: Iterable[tuple[str, PurePath]]) -> None:
     root = await git_root()
     cwd = Path.cwd()
     tmp = Path(mkdtemp())
@@ -72,7 +72,7 @@ def _parse_args() -> SPEC:
     return spec_parse(parser)
 
 
-def _parse_lines(lines: Sequence[str]) -> Iterator[Tuple[str, PurePath]]:
+def _parse_lines(lines: Sequence[str]) -> Iterator[tuple[str, PurePath]]:
     for line in lines:
         sha, _, path = line.splitlines()
         yield sha, PurePath(path)

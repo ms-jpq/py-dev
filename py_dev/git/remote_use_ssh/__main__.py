@@ -1,6 +1,6 @@
 from os import altsep, sep
 from pathlib import PurePosixPath
-from typing import NoReturn, Tuple
+from typing import NoReturn
 from urllib.parse import urlsplit
 
 from std2.asyncio.subprocess import call
@@ -10,7 +10,7 @@ from ...log import log
 from ...run import run_main
 
 
-async def _git_uri() -> Tuple[str, str]:
+async def _git_uri() -> tuple[str, str]:
     proc = await call("git", "remote", capture_stderr=False)
     remote = proc.stdout.decode().rstrip()
     proc = await call("git", "remote", "get-url", remote, capture_stderr=False)

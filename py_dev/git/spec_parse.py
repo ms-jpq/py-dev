@@ -2,7 +2,7 @@ from argparse import ArgumentParser, Namespace
 from enum import Enum, auto
 from os import environ
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Sequence
 
 from std2.string import removeprefix
 
@@ -19,7 +19,7 @@ class Mode(Enum):
     execute = auto()
 
 
-SPEC = Tuple[Mode, Sequence[str], Namespace]
+SPEC = tuple[Mode, Sequence[str], Namespace]
 
 
 def _parse_args() -> Namespace:

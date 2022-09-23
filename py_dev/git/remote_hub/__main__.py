@@ -1,4 +1,4 @@
-from typing import NoReturn, Tuple
+from typing import NoReturn
 from urllib.parse import quote, urlsplit
 from webbrowser import open as open_w
 
@@ -10,7 +10,7 @@ from ...log import log
 from ...run import run_main
 
 
-async def _git_uri() -> Tuple[str, str]:
+async def _git_uri() -> tuple[str, str]:
     proc = await call(
         "git",
         "rev-parse",

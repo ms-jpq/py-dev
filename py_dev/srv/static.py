@@ -11,7 +11,7 @@ from os.path import normcase
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
 from stat import S_ISDIR
-from typing import Iterator, Optional, Sequence, Tuple, Union
+from typing import Iterator, Optional, Sequence,  Union
 from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment
@@ -28,7 +28,7 @@ _INDEX = PurePath("index.html")
 @dataclass(frozen=True)
 class _Fd:
     path: Path
-    sortby: Tuple[bool, str, str]
+    sortby: tuple[bool, str, str]
     rel_path: PurePath
     name: str
     mime: Optional[str]
@@ -66,7 +66,7 @@ def _fd(root: PurePath, path: Path, stat: stat_result) -> _Fd:
 
 def _seek(
     handler: BaseHTTPRequestHandler, prefix: PurePosixPath, root: Path
-) -> Union[_Fd, Tuple[_Fd, ...], None]:
+) -> Union[_Fd, tuple[_Fd, ...], None]:
     uri = urlsplit(handler.path)
     raw = normcase(unquote(uri.path))
     try:
@@ -111,7 +111,7 @@ def _send_headers(handler: BaseHTTPRequestHandler, fd: _Fd) -> None:
     handler.end_headers()
 
 
-def _index(j2: Environment, fd: Tuple[_Fd, ...]) -> bytes:
+def _index(j2: Environment, fd: tuple[_Fd, ...]) -> bytes:
     index, *fds = fd
     env = {
         "PATH": index.rel_path,
