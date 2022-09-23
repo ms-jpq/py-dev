@@ -6,7 +6,7 @@ dependencies = [
 ]
 name = "py_dev"
 requires-python = ">=3.8.0"
-version = "0.1.72"
+version = "0.1.73"
 
 [project.scripts]
 ccat        = "py_dev.ccat.__main__:main"

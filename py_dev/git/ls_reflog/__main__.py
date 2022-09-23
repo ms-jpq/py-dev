@@ -94,7 +94,7 @@ async def _main() -> int:
         line, *_ = lines
         ref, *_ = line.split()
         re, pos = _ref(ref)
-        print_argv(f"{re}@{{{pos + 1}}}")
+        print_argv(f"{re}@{{{pos + 1}}}", escape=False)
 
     elif mode is Mode.normal:
         reflog = await _git_reflog(args.regex, path=args.path, search=args.search)

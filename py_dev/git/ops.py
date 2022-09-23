@@ -14,8 +14,8 @@ from std2.shutil import hr
 from ..ccat.pprn import pprn_basic
 
 
-def print_argv(*args: str) -> None:
-    stdout.write(join(args))
+def print_argv(*args: str, escape: bool) -> None:
+    stdout.write(join(args) if escape else " ".join(args))
     stdout.write(linesep)
 
 

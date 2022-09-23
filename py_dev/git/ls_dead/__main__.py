@@ -64,7 +64,7 @@ async def _git_show_many(it: Iterable[tuple[str, PurePath]]) -> None:
         temp.parent.mkdir(parents=True, exist_ok=True)
         temp.write_bytes(proc.stdout)
 
-    print_argv(normcase(tmp))
+    print_argv(normcase(tmp), escape=False)
 
 
 def _parse_args() -> SPEC:
