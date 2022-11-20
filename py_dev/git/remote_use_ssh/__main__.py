@@ -1,4 +1,4 @@
-from os import altsep, sep
+from posixpath import sep
 from pathlib import PurePosixPath
 from typing import NoReturn
 from urllib.parse import urlsplit
@@ -33,7 +33,7 @@ async def _main() -> int:
 
     if parsed.scheme in {"http", "https"}:
         if parsed.netloc == "github.com":
-            path = PurePosixPath(parsed.path).with_suffix("").relative_to(altsep or sep)
+            path = PurePosixPath(parsed.path).with_suffix("").relative_to(sep)
             new_uri = f"git@{parsed.netloc}:{path}.git"
             await _set_uri(remote, uri=new_uri)
         else:
