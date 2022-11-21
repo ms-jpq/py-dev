@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         python_ver:
+          - "3.11"
           - "3.10"
           - "3.9"
 
@@ -25,21 +26,30 @@ jobs:
         with:
           python-version: ${{ matrix.python_ver }}
 
-      - name: Pip Packages
-        run: pip install -U -- mypy toml
+      - name: Install Toml
+        run: pip install -- toml
 
-      - name: Pip Packages 2
+      - name: Install Pip Packages
         shell: python
         run: |-
+          from itertools import chain
           from os import execl
-          from pathlib import Path
           from sys import executable
-          from toml import loads
-          path = Path.cwd() / "pyproject.toml"
-          toml = loads(path.read_text())
-          deps = toml["project"]["dependencies"]
-          execl(executable, executable, "-m", "pip", "install", "--", *deps)
+          from toml import load
 
+          toml = load("pyproject.toml")
+          project = toml["project"]
+          execl(
+            executable,
+            executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--",
+            *project["dependencies"],
+            *chain.from_iterable(project["optional-dependencies"].values()),
+          )
 
       - name: Lint
         run: mypy -- .
