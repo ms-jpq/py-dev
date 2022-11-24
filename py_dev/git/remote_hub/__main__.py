@@ -1,5 +1,6 @@
 from typing import NoReturn
 from urllib.parse import quote, urlsplit
+from posixpath import sep
 from webbrowser import open as open_w
 
 from std2.asyncio.subprocess import call
@@ -19,7 +20,7 @@ async def _git_uri() -> tuple[str, str]:
         "@{upstream}",
         capture_stderr=False,
     )
-    remote, _, branch = proc.stdout.decode().strip().partition("/")
+    remote, _, branch = proc.stdout.decode().strip().partition(sep)
     proc = await call(
         "git",
         "remote",

@@ -41,7 +41,7 @@ async def pprn(content: bytes, path: Optional[PurePath]) -> None:
 @lru_cache(maxsize=None)
 async def git_root() -> PurePath:
     proc = await call("git", "rev-parse", "--show-toplevel", capture_stderr=False)
-    return PurePath(proc.stdout.rstrip().decode("utf-8"))
+    return PurePath(proc.stdout.rstrip().decode())
 
 
 async def pretty_file(sha: str, path: PurePath) -> None:
