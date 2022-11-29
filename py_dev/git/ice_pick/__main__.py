@@ -42,7 +42,7 @@ async def _git_commits(
         "git",
         "log",
         "--pretty=format:%H%x00%ae",
-        f"${cherry_branch}..${working_branch}",
+        f"{cherry_branch}..{working_branch}",
         capture_stderr=False,
     )
 

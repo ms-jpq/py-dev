@@ -1,7 +1,7 @@
 [project]
 name            = "py_dev"
 requires-python = ">=3.8.0"
-version         = "0.1.75"
+version         = "0.1.76"
 
 dependencies = [
   "std2@https://github.com/ms-jpq/std2/archive/963cf22346620926c0bd64f628ff4d8141123db5.tar.gz",
