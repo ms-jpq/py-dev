@@ -70,7 +70,7 @@ async def _git_stash() -> bool:
 async def _git_pick(
     working_branch: str, cherry_branch: str, commits: Sequence[str], dirty: bool
 ) -> None:
-    await call("git", "switch", "--", cherry_branch, capture_stderr=False)
+    await call("git", "switch", "--no-guess", "--", cherry_branch, capture_stderr=False)
     await call(
         "git",
         "cherry-pick",
@@ -80,7 +80,9 @@ async def _git_pick(
         *reversed(commits),
         capture_stderr=False,
     )
-    await call("git", "switch", "--", working_branch, capture_stderr=False)
+    await call(
+        "git", "switch", "--no-guess", "--", working_branch, capture_stderr=False
+    )
     if dirty:
         await call("git", "stash", "pop", capture_stderr=False)
 

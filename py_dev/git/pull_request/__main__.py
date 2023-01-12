@@ -32,6 +32,8 @@ async def _main() -> int:
     await call(
         "git",
         "switch",
+        "--no-guess",
+        "--",
         br_name,
         capture_stdout=False,
         capture_stderr=False,
@@ -41,4 +43,3 @@ async def _main() -> int:
 
 def main() -> NoReturn:
     run_main(_main())
-
