@@ -52,7 +52,7 @@ async def _main() -> int:
         await pretty_commit(args.unified, sha=sha)
 
     elif mode is Mode.execute:
-        stdout.write(join(_parse_lines(lines)))
+        stdout.write(join(f"{line}^" for line in _parse_lines(lines)))
 
     elif mode is Mode.normal:
         commits = await _rg_commits(args.regex, *args.search)
