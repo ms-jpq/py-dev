@@ -11,7 +11,7 @@ from os.path import normcase
 from pathlib import Path, PurePath, PurePosixPath
 from shutil import copyfileobj
 from stat import S_ISDIR
-from typing import Iterator, Optional, Sequence,  Union
+from typing import Any, Iterator, Optional, Sequence, Union, cast
 from urllib.parse import unquote, urlsplit
 
 from jinja2 import Environment
@@ -177,4 +177,4 @@ def get(
     else:
         _send_headers(handler, fd=fd)
         with fd.path.open("rb") as pp, suppress(ConnectionError):
-            copyfileobj(pp, handler.wfile)
+            copyfileobj(cast(Any, pp), handler.wfile)
