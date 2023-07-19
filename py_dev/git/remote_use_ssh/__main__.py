@@ -1,5 +1,5 @@
-from posixpath import sep
 from pathlib import PurePosixPath
+from posixpath import sep
 from typing import NoReturn
 from urllib.parse import urlsplit
 

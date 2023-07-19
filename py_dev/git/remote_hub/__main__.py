@@ -1,6 +1,6 @@
+from posixpath import sep
 from typing import NoReturn
 from urllib.parse import quote, urlsplit
-from posixpath import sep
 from webbrowser import open as open_w
 
 from std2.asyncio.subprocess import call

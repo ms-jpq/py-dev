@@ -1,7 +1,7 @@
 from contextlib import suppress
 from os.path import normcase
 from pathlib import PurePath
-from typing import Optional, cast
+from typing import Optional, cast, no_type_check
 
 from pygments import highlight
 from pygments.formatters import get_formatter_by_name
@@ -14,6 +14,7 @@ from pygments.util import ClassNotFound
 from .consts import DEFAULT_FORMATTER, DEFAULT_STYLE
 
 
+@no_type_check
 def _get_lexer(filename: Optional[PurePath], text: str) -> Lexer:
     if filename:
         with suppress(ClassNotFound):
